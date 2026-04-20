@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { ShieldCheck, Eye, EyeOff, AlertCircle, Lock, User } from "lucide-react";
+import Link from "next/link";
+import { ShieldCheck, Eye, EyeOff, AlertCircle, Lock, User, ArrowLeft } from "lucide-react";
 
 // Simple hardcoded admin credentials for the mini project
 const ADMIN_CREDS = { username: "admin", password: "xplore2025" };
@@ -141,6 +142,17 @@ export default function AdminLoginPage() {
               Demo credentials: <span className="text-slate-400">admin / xplore2025</span>
             </p>
           </div>
+        </div>
+
+        {/* Back link */}
+        <div className="text-center mt-5">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 transition-colors"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            Back to Assessment
+          </Link>
         </div>
       </div>
     </div>
