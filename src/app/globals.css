@@ -1,26 +1,106 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* Informatics blue palette */
+  --color-brand-50:  #eff6ff;
+  --color-brand-100: #dbeafe;
+  --color-brand-200: #bfdbfe;
+  --color-brand-300: #93c5fd;
+  --color-brand-400: #60a5fa;
+  --color-brand-500: #1d6eb5;
+  --color-brand-600: #1a5fa0;
+  --color-brand-700: #164e8c;
+  --color-brand-800: #103d72;
+  --color-brand-900: #0a2d58;
+
+  --color-surface:        #0c1220;
+  --color-surface-card:   #131d30;
+  --color-surface-border: #1e2f4a;
+  --color-surface-muted:  #64748b;
+
+  --font-sans:    'Inter', system-ui, sans-serif;
+  --font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
   }
+
+  body {
+    background-color: #0c1220;
+    color: #f1f5f9;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  ::selection {
+    background-color: rgba(29, 110, 181, 0.3);
+    color: white;
+  }
+
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: #0c1220; }
+  ::-webkit-scrollbar-thumb { background: #1e2f4a; border-radius: 999px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(29, 110, 181, 0.6); }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ── Animations ────────────────────────────────────────── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(1.4); }
+}
+@keyframes progressFill {
+  from { width: 0; }
+}
+
+.animate-fade-in-up { animation: fadeInUp 0.5s ease-out both; }
+.animate-fade-in    { animation: fadeIn 0.3s ease-out both; }
+.animate-scale-in   { animation: scaleIn 0.3s ease-out both; }
+
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+
+/* ── Glassmorphism card ─────────────────────────────── */
+.glass-card {
+  background: rgba(19, 29, 48, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(30, 47, 74, 0.8);
+  border-radius: 1rem;
+}
+
+/* ── Star rating ────────────────────────────────────── */
+.star-btn {
+  cursor: pointer;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+.star-btn:hover { transform: scale(1.2); }
+
+/* ── Progress bar animation ─────────────────────────── */
+.bar-animate {
+  animation: progressFill 0.8s ease-out both;
+}
+
+/* ── Glow text ──────────────────────────────────────── */
+.text-glow {
+  text-shadow: 0 0 20px rgba(29, 110, 181, 0.6);
 }
