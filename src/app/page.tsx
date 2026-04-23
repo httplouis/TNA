@@ -17,13 +17,13 @@ export const metadata: Metadata = {
 const FEATURES = [
   {
     icon: ClipboardList,
-    title: "Structured Survey",
-    desc: "Answer 18 carefully crafted questions across 6 skill categories — takes under 10 minutes.",
+    title: "Comprehensive Excel Assessment",
+    desc: "64 questions across 12 Microsoft Excel skill areas — covering everything from worksheets to macros.",
   },
   {
     icon: BarChart3,
     title: "Auto-Scored Analysis",
-    desc: "The system instantly computes your scores per category and generates a preliminary analysis.",
+    desc: "The system instantly computes your experience level per category and generates a preliminary analysis.",
   },
   {
     icon: ShieldCheck,
@@ -32,18 +32,24 @@ const FEATURES = [
   },
   {
     icon: Users,
-    title: "Tailored Recommendations",
-    desc: "You receive specific training program recommendations based on your assessment profile.",
+    title: "Tailored Training Programs",
+    desc: "You receive specific Informatics training program recommendations based on your Excel skill profile.",
   },
 ];
 
 const CATEGORIES = [
-  { name: "Communication Skills" },
-  { name: "Technical Skills" },
-  { name: "Leadership & Management" },
-  { name: "Problem Solving" },
-  { name: "Teamwork & Collaboration" },
-  { name: "Customer Service" },
+  { name: "Worksheet & Workbook Management" },
+  { name: "Working with Graphic Objects" },
+  { name: "Working with Charts" },
+  { name: "Working with Excel Databases" },
+  { name: "Working with Advanced Functions" },
+  { name: "Linking Data" },
+  { name: "Proofing and Security" },
+  { name: "Organizing Table Data" },
+  { name: "Analyzing Data" },
+  { name: "Working with Multiple Workbooks" },
+  { name: "Importing and Exporting Data" },
+  { name: "Basic Macros" },
 ];
 
 export default function LandingPage() {
@@ -128,9 +134,9 @@ export default function LandingPage() {
           {/* Quick stats */}
           <div className="mt-16 grid grid-cols-3 gap-6 max-w-lg mx-auto animate-fade-in-up delay-300">
             {[
-              { val: "18", label: "Questions" },
-              { val: "6",  label: "Skill Areas" },
-              { val: "~8", label: "Minutes" },
+              { val: "64",  label: "Questions" },
+              { val: "12",  label: "Skill Areas" },
+              { val: "7",   label: "Sections" },
             ].map(({ val, label }) => (
               <div key={label} className="text-center">
                 <div className="text-3xl font-bold text-white">{val}</div>
@@ -144,9 +150,10 @@ export default function LandingPage() {
       {/* ── Skill Categories ─────────────────────────────────── */}
       <section className="py-16 px-6">
         <div className="max-w-5xl mx-auto">
-          <p className="text-center text-xs uppercase tracking-widest text-slate-500 font-semibold mb-8">
-            Skill Categories Covered
+          <p className="text-center text-xs uppercase tracking-widest text-slate-500 font-semibold mb-2">
+            Microsoft Excel Skill Areas Covered
           </p>
+          <p className="text-center text-slate-500 text-sm mb-8">Across 5 self-assessment sections</p>
           <div className="flex flex-wrap justify-center gap-3">
             {CATEGORIES.map(({ name }) => (
               <span
@@ -172,10 +179,10 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
-              { step: "01", title: "Fill the Survey",  desc: "Rate yourself across 18 questions on a 1–5 scale.", icon: ClipboardList },
-              { step: "02", title: "System Scores It", desc: "Auto-computed average scores per skill category.",  icon: BarChart3 },
-              { step: "03", title: "Admin Reviews",    desc: "Our team reviews, adds insights, and approves.",    icon: ShieldCheck },
-              { step: "04", title: "You Get Results",  desc: "Receive tailored training recommendations.",       icon: CheckCircle2 },
+              { step: "01", title: "Accept & Fill",    desc: "Accept the privacy notice, fill in your details, then rate your Excel skills across 7 sections.", icon: ClipboardList },
+              { step: "02", title: "System Scores It", desc: "Auto-computed experience levels per category — instantly after you submit.", icon: BarChart3 },
+              { step: "03", title: "Admin Reviews",    desc: "Our team reviews, adds insights, and approves the results.", icon: ShieldCheck },
+              { step: "04", title: "You Get Results",  desc: "Receive tailored Microsoft Excel training program recommendations by email.", icon: CheckCircle2 },
             ].map(({ step, title, desc, icon: Icon }, i) => (
               <div key={step} className="relative glass-card p-6 text-center">
                 {i < 3 && (
@@ -264,7 +271,10 @@ export default function LandingPage() {
               className="h-5 w-auto object-contain opacity-50"
             />
           </div>
-          <p className="text-xs text-slate-600">TNA Portal — Training Needs Assessment System</p>
+          <div className="flex items-center gap-4">
+            <p className="text-xs text-slate-600">TNA Portal — Microsoft Excel Corporate Training</p>
+            <Link href="/privacy" className="text-xs text-slate-600 hover:text-slate-400 transition-colors underline underline-offset-2">Privacy Notice</Link>
+          </div>
         </div>
       </footer>
     </div>
