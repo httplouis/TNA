@@ -259,7 +259,7 @@ function generateDummySubmission(index: number): Submission {
   const responses: Response[] = QUESTIONS.map(q => {
     const baseSkill = (index % 3) + 2; 
     const variance = Math.floor(Math.random() * 3) - 1; 
-    return { questionId: q.id, rating: Math.min(5, Math.max(1, baseSkill + variance)) };
+    return { questionId: q.id, rating: Math.min(5, Math.max(1, baseSkill + variance)) as SkillLevel };
   });
   
   const date = new Date();
@@ -271,8 +271,9 @@ function generateDummySubmission(index: number): Submission {
       clientName: DUMMY_CLIENTS[index % 5], address: "123 Business Rd",
       traineeName: DUMMY_NAMES[index % 5], jobTitle: DUMMY_TITLES[index % 5],
       mobileNumber: "09123456789", telephoneNumber: "123-4567",
-      email: `${DUMMY_NAMES[index % 5].split(" ")[0].toLowerCase()}@example.com`, pdpaConsent: true,
+      email: `${DUMMY_NAMES[index % 5].split(" ")[0].toLowerCase()}@example.com`,
     },
+    consentGiven: true,
     responses, results: computeResults(responses),
     openAnswers: { tasksPerformed: "Various data entry and reporting.", trainingGoals: "Learn advanced formulas." },
     status: index === 0 ? "pending" : index % 2 === 0 ? "reviewed" : "approved",

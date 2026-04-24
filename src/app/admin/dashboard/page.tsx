@@ -254,7 +254,7 @@ function SubmissionsTable({ submissions, search, setSearch, filterStatus, setFil
                     {isSpreadsheet && ALL_CATEGORIES.map(cat => {
                       const r = sub.results?.find(res => res.category === cat);
                       const score = r && r.answeredCount > 0 ? r.avgScore : null;
-                      const color = score ? LEVEL_COLORS[r.level] : "transparent";
+                      const color = score && r ? LEVEL_COLORS[r.level] : "transparent";
                       return (
                         <td key={cat} className="px-3 py-4 text-center">
                           {score ? (
