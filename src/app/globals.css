@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
   /* Informatics blue palette */
@@ -22,6 +23,33 @@
   --font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 
+/* ── Theme CSS Variables ────────────────────────────── */
+:root {
+  --bg-page:    #f8fafc;
+  --bg-card:    #ffffff;
+  --bg-surface: #f1f5f9;
+  --bg-nav:     #eff6ff;
+  --bg-hover:   rgba(0, 0, 0, 0.05);
+  --text-base:  #0f172a;
+  --text-muted: #64748b;
+  --border:     #e2e8f0;
+  --scrollbar-track: #f1f5f9;
+  --scrollbar-thumb: #cbd5e1;
+}
+
+:root.dark {
+  --bg-page:    #0c1220;
+  --bg-card:    rgba(19, 29, 48, 0.7);
+  --bg-surface: #0a1628;
+  --bg-nav:     rgba(10, 22, 40, 0.8);
+  --bg-hover:   rgba(255, 255, 255, 0.05);
+  --text-base:  #f1f5f9;
+  --text-muted: #94a3b8;
+  --border:     #1e2f4a;
+  --scrollbar-track: #0c1220;
+  --scrollbar-thumb: #1e2f4a;
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
@@ -29,9 +57,10 @@
   }
 
   body {
-    background-color: #0c1220;
-    color: #f1f5f9;
+    background-color: var(--bg-page);
+    color: var(--text-base);
     font-family: 'Inter', system-ui, sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   ::selection {
@@ -40,8 +69,8 @@
   }
 
   ::-webkit-scrollbar { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track { background: #0c1220; }
-  ::-webkit-scrollbar-thumb { background: #1e2f4a; border-radius: 999px; }
+  ::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+  ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 999px; }
   ::-webkit-scrollbar-thumb:hover { background: rgba(29, 110, 181, 0.6); }
 }
 
@@ -82,10 +111,11 @@
 
 /* ── Glassmorphism card ─────────────────────────────── */
 .glass-card {
-  background: rgba(19, 29, 48, 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(30, 47, 74, 0.8);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 1rem;
+  backdrop-filter: blur(12px);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 /* ── Star rating ────────────────────────────────────── */

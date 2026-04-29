@@ -33,27 +33,27 @@ export default function RatingSectionStep({
         <span className="text-xs font-bold text-[#60a5fa] uppercase tracking-widest">
           Section {sectionNum} of 7
         </span>
-        <h2 className="text-xl font-bold text-white mt-1">SELF-ASSESSMENT RATING SHEET</h2>
-        <p className="text-slate-400 text-sm mt-1">
+        <h2 className="text-xl font-bold text-[var(--text-base)] mt-1">SELF-ASSESSMENT RATING SHEET</h2>
+        <p className="text-[var(--text-muted)] text-sm mt-1">
           Please complete this form by indicating your level of experience in each area.
         </p>
       </div>
 
       {/* Level legend */}
       <div className="glass-card p-4 mb-8 overflow-x-auto">
-        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Experience Levels</p>
+        <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-3">Experience Levels</p>
         <table className="w-full text-sm">
           <thead>
             <tr>
-              <th className="text-left text-xs text-slate-500 pb-2 pr-4 whitespace-nowrap">Level</th>
-              <th className="text-left text-xs text-slate-500 pb-2">Description</th>
+              <th className="text-left text-xs text-[var(--text-muted)] pb-2 pr-4 whitespace-nowrap">Level</th>
+              <th className="text-left text-xs text-[var(--text-muted)] pb-2">Description</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
             {LEVEL_ROWS.map(({ level, desc }) => (
               <tr key={level}>
-                <td className="py-2 pr-6 font-bold text-white text-center w-12">{level}</td>
-                <td className="py-2 text-slate-300">{desc}</td>
+                <td className="py-2 pr-6 font-bold text-[var(--text-base)] text-center w-12">{level}</td>
+                <td className="py-2 text-[var(--text-base)]">{desc}</td>
               </tr>
             ))}
           </tbody>
@@ -66,7 +66,7 @@ export default function RatingSectionStep({
           const qs = QUESTIONS.filter((q) => q.category === group.category);
           return (
             <div key={group.category}>
-              <h3 className="text-base font-bold text-white mb-4 pb-2 border-b border-white/10">
+              <h3 className="text-base font-bold text-[var(--text-base)] mb-4 pb-2 border-b border-[var(--border)]">
                 {group.title}
               </h3>
               <div className="space-y-4">
@@ -79,7 +79,7 @@ export default function RatingSectionStep({
                   return (
                     <div key={q.id} className={`glass-card p-5 ${q.isSummary ? "border-[#1d6eb5]/30 bg-[#1d6eb5]/5" : ""}`}>
                       <p className="text-sm font-medium text-slate-200 mb-4 leading-relaxed">
-                        {!q.isSummary && <span className="text-slate-500 mr-2">{qi + 1}.</span>}
+                        {!q.isSummary && <span className="text-[var(--text-muted)] mr-2">{qi + 1}.</span>}
                         {q.isSummary && <span className="text-[#60a5fa] text-xs font-bold uppercase mr-2">Overall</span>}
                         {q.text}
                         <span className="text-slate-600 text-xs ml-2">(optional)</span>
@@ -108,7 +108,7 @@ export default function RatingSectionStep({
                           );
                         })}
                         {rating && (
-                          <span className="ml-2 self-center text-xs text-slate-500">
+                          <span className="ml-2 self-center text-xs text-[var(--text-muted)]">
                             {LEVEL_ROWS[rating - 1].desc}
                           </span>
                         )}
@@ -118,14 +118,14 @@ export default function RatingSectionStep({
                       {isHighlyRated && (
                         <div className="mt-4 animate-fade-in">
                           <label className="block text-xs font-medium text-[#60a5fa] mb-1.5">
-                            What else would you like to learn about this topic? <span className="text-slate-500">(optional)</span>
+                            What else would you like to learn about this topic? <span className="text-[var(--text-muted)]">(optional)</span>
                           </label>
                           <input
                             type="text"
                             placeholder="e.g. advanced techniques, shortcuts, best practices..."
                             value={wantsToLearn}
                             onChange={(e) => onRate(q.id, rating, e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg bg-white/5 border border-[#1d6eb5]/30 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-[#1d6eb5]/40 transition-all"
+                            className="w-full px-3 py-2 rounded-lg bg-[var(--bg-surface)] border border-[#1d6eb5]/30 text-sm text-[var(--text-base)] placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-[#1d6eb5]/40 transition-all"
                           />
                         </div>
                       )}
@@ -142,7 +142,7 @@ export default function RatingSectionStep({
       <div className="flex gap-3 mt-8">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-medium border border-white/10 text-slate-400 hover:text-white transition-all"
+          className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-medium border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-base)] transition-all"
         >
           <ChevronLeft className="w-4 h-4" />
           Previous
@@ -150,7 +150,7 @@ export default function RatingSectionStep({
         <button
           id={`btn-section${sectionNum}-next`}
           onClick={onNext}
-          className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm bg-[#1d6eb5] hover:bg-[#1a5fa0] text-white shadow-xl shadow-blue-900/30 transition-all hover:-translate-y-0.5"
+          className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm bg-[#1d6eb5] hover:bg-[#1a5fa0] text-[var(--text-base)] shadow-xl shadow-blue-900/30 transition-all hover:-translate-y-0.5"
         >
           {sectionIndex < totalSections - 1 ? (
             <>Next Section <ChevronRight className="w-4 h-4" /></>

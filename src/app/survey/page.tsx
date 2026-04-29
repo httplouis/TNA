@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { ChevronLeft, Clock, ShieldCheck, RotateCcw } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   SURVEY_SECTIONS, QUESTIONS, computeResults, saveSubmission, generateId,
   type SkillLevel, type Response, type ParticipantInfo, type OpenAnswers,
@@ -131,7 +132,7 @@ export default function SurveyPage() {
 
   if (!hydrated) {
     return (
-      <div className="min-h-screen bg-[#0c1220] flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--bg-page)] flex items-center justify-center">
         <div className="w-8 h-8 rounded-full border-2 border-[#60a5fa] border-t-transparent animate-spin" />
       </div>
     );
@@ -140,22 +141,54 @@ export default function SurveyPage() {
   const currentSectionIdx = SECTION_STEPS.indexOf(step as Step);
   const currentSection    = currentSectionIdx >= 0 ? SURVEY_SECTIONS[currentSectionIdx] : null;
 
+  function quickFill() {
+    setInfo({
+      clientName: "Test Company Inc.",
+      address: "123 Innovation Drive",
+      traineeName: "John Doe",
+      jobTitle: "Data Analyst",
+      mobileNumber: "09123456789",
+      telephoneNumber: "",
+      email: "johndoe@example.com"
+    });
+    const testResponses: Record<string, Response> = {};
+    QUESTIONS.forEach(q => {
+      // Randomly assign a rating between 1 and 5
+      const rating = (Math.floor(Math.random() * 5) + 1) as SkillLevel;
+      testResponses[q.id] = { questionId: q.id, rating };
+    });
+    setResponses(testResponses);
+    setOA({
+      tasksPerformed: "Creating weekly reports, analyzing sales data.",
+      trainingGoals: "Learn how to automate reports with macros."
+    });
+    setStep("review");
+  }
+
   return (
-    <div className="min-h-screen bg-[#0c1220] text-slate-100" ref={topRef}>
+    <div className="min-h-screen transition-colors duration-300" style={{ backgroundColor: 'var(--bg-page)', color: 'var(--text-base)' }} ref={topRef}>
 
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-white/5 bg-[#0c1220]/80 backdrop-blur-md">
+      <header className="sticky top-0 z-40 backdrop-blur-md transition-colors duration-300" style={{ backgroundColor: 'var(--bg-nav)', borderBottom: '1px solid var(--border)' }}>
         <div className="max-w-3xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors">
+          <Link href="/" className="flex items-center gap-2 text-sm transition-colors" style={{ color: 'var(--text-muted)' }}>
             <ChevronLeft className="w-4 h-4" /> Back
           </Link>
-          <Image src="/informatics-logo.png" alt="Informatics Holdings Philippines" width={100} height={26} className="h-6 w-auto object-contain" />
+          <div className="flex items-center gap-4">
+            <Image src="/informatics-logo.png" alt="Informatics Holdings Philippines" width={100} height={26} className="h-6 w-auto object-contain dark:brightness-100 brightness-0" />
+            {process.env.NODE_ENV === "development" && (
+              <button onClick={quickFill} className="hidden sm:block px-2 py-1 rounded text-[10px] font-bold bg-[#60a5fa]/20 text-[#60a5fa] hover:bg-[#60a5fa]/30 transition-colors uppercase tracking-wider">
+                Quick Fill
+              </button>
+            )}
+            <ThemeToggle />
+          </div>
           {step !== "privacy" && step !== "submitting" ? (
-            <span className="text-xs text-slate-400">{Object.keys(responses).length}/{QUESTIONS.length} rated</span>
+            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{Object.keys(responses).length}/{QUESTIONS.length} rated</span>
           ) : <div className="w-20" />}
         </div>
         {step !== "privacy" && step !== "submitting" && (
-          <div className="h-0.5 bg-white/5">
+          <div className="h-0.5" style={{ backgroundColor: 'var(--border)' }}>
             <div className="h-full bg-gradient-to-r from-[#1d6eb5] to-[#60a5fa] transition-all duration-500" style={{ width: `${progress}%` }} />
           </div>
         )}
@@ -172,14 +205,14 @@ export default function SurveyPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-amber-300 mb-1">You have an unfinished survey</p>
-                <p className="text-xs text-slate-400">Saved {formatRelTime(draft.savedAt)}
-                  {draft.info.traineeName && <> — <span className="text-slate-300">{draft.info.traineeName}</span></>}
+                <p className="text-xs text-[var(--text-muted)]">Saved {formatRelTime(draft.savedAt)}
+                  {draft.info.traineeName && <> — <span className="text-[var(--text-base)]">{draft.info.traineeName}</span></>}
                 </p>
-                <p className="text-xs text-slate-500 mt-0.5">{Object.keys(draft.responses).length} of {QUESTIONS.length} items rated</p>
+                <p className="text-xs text-[var(--text-muted)] mt-0.5">{Object.keys(draft.responses).length} of {QUESTIONS.length} items rated</p>
               </div>
               <div className="flex flex-col gap-2 flex-shrink-0">
                 <button id="btn-resume-draft" onClick={restoreDraft} className="px-4 py-2 rounded-lg text-xs font-semibold bg-amber-500 hover:bg-amber-400 text-black transition-all">Resume</button>
-                <button id="btn-discard-draft" onClick={discardDraft} className="px-4 py-2 rounded-lg text-xs font-medium border border-white/10 text-slate-400 hover:text-white transition-all flex items-center gap-1 justify-center">
+                <button id="btn-discard-draft" onClick={discardDraft} className="px-4 py-2 rounded-lg text-xs font-medium border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-base)] transition-all flex items-center gap-1 justify-center">
                   <RotateCcw className="w-3 h-3" /> Start over
                 </button>
               </div>
@@ -203,8 +236,8 @@ export default function SurveyPage() {
               <div className="absolute inset-0 rounded-full border-2 border-[#1d6eb5]/20" />
               <div className="absolute inset-0 rounded-full border-t-2 border-[#60a5fa] animate-spin" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">Submitting your assessment...</h3>
-            <p className="text-slate-400 text-sm">Please wait a moment.</p>
+            <h3 className="text-xl font-bold text-[var(--text-base)] mb-2">Submitting your assessment...</h3>
+            <p className="text-[var(--text-muted)] text-sm">Please wait a moment.</p>
           </div>
         )}
       </main>
@@ -215,7 +248,7 @@ export default function SurveyPage() {
           href="/privacy"
           target="_blank"
           id="btn-view-privacy"
-          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-semibold bg-[#0a1628]/90 border border-white/10 text-slate-400 hover:text-white hover:border-[#1d6eb5]/40 backdrop-blur-md shadow-xl transition-all hover:-translate-y-0.5"
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-semibold bg-[var(--bg-surface)]/90 border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-base)] hover:border-[#1d6eb5]/40 backdrop-blur-md shadow-xl transition-all hover:-translate-y-0.5"
         >
           <ShieldCheck className="w-3.5 h-3.5 text-[#60a5fa]" />
           Privacy Policy

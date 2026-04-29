@@ -11,9 +11,9 @@ const ADMIN_CREDS = { username: "admin", password: "xplore2025" };
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [form, setForm]     = useState({ username: "", password: "" });
-  const [show, setShow]     = useState(false);
-  const [error, setError]   = useState("");
+  const [form, setForm] = useState({ username: "", password: "" });
+  const [show, setShow] = useState(false);
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleLogin(e: React.FormEvent) {
@@ -51,17 +51,19 @@ export default function AdminLoginPage() {
               priority
             />
             <div className="h-6 w-px bg-white/15" />
-            <Image
-              src="/xplore-logo-white.png"
-              alt="Xplore Philippines"
-              width={75}
-              height={26}
-              className="h-7 w-auto object-contain"
-              priority
-            />
+              <div className="flex items-center justify-center w-[160px]">
+                <Image
+                  src="/xplore-logo-white.png"
+                  alt="Xplore Philippines"
+                  width={200}
+                  height={100}
+                  className="h-10 w-auto object-contain"
+                  priority
+                />
+              </div>
           </div>
-          <h1 className="text-2xl font-bold text-white">Admin Access</h1>
-          <p className="text-slate-500 text-sm mt-1">TNA Portal — Xplore Philippines</p>
+          <h1 className="text-2xl font-bold text-[var(--text-base)]">Admin Access</h1>
+          <p className="text-[var(--text-muted)] text-sm mt-1">TNA Portal — Xplore Philippines</p>
         </div>
 
         {/* Card */}
@@ -69,11 +71,11 @@ export default function AdminLoginPage() {
           <form onSubmit={handleLogin} className="space-y-5">
             {/* Username */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5" htmlFor="admin-username">
+              <label className="block text-sm font-medium text-[var(--text-base)] mb-1.5" htmlFor="admin-username">
                 Username
               </label>
               <div className="relative">
-                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
                 <input
                   id="admin-username"
                   type="text"
@@ -81,18 +83,18 @@ export default function AdminLoginPage() {
                   placeholder="admin"
                   value={form.username}
                   onChange={(e) => setForm({ ...form, username: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-[#8B1A1A]/50 focus:border-[#8B1A1A]/40 transition-all"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-[var(--bg-surface)] border border-[var(--border)] text-sm text-[var(--text-base)] placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-[#8B1A1A]/50 focus:border-[#8B1A1A]/40 transition-all"
                 />
               </div>
             </div>
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5" htmlFor="admin-password">
+              <label className="block text-sm font-medium text-[var(--text-base)] mb-1.5" htmlFor="admin-password">
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
                 <input
                   id="admin-password"
                   type={show ? "text" : "password"}
@@ -100,12 +102,12 @@ export default function AdminLoginPage() {
                   placeholder="••••••••"
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  className="w-full pl-10 pr-11 py-3 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-[#8B1A1A]/50 focus:border-[#8B1A1A]/40 transition-all"
+                  className="w-full pl-10 pr-11 py-3 rounded-xl bg-[var(--bg-surface)] border border-[var(--border)] text-sm text-[var(--text-base)] placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-[#8B1A1A]/50 focus:border-[#8B1A1A]/40 transition-all"
                 />
                 <button
                   type="button"
                   onClick={() => setShow((s) => !s)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-base)] transition-colors"
                 >
                   {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -124,7 +126,7 @@ export default function AdminLoginPage() {
               id="btn-admin-login"
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-xl font-semibold text-sm bg-[#8B1A1A] hover:bg-[#7B1414] text-white shadow-xl shadow-red-900/30 transition-all hover:-translate-y-0.5 disabled:opacity-60 disabled:translate-y-0 flex items-center justify-center gap-2"
+              className="w-full py-3 rounded-xl font-semibold text-sm bg-[#8B1A1A] hover:bg-[#7B1414] text-[var(--text-base)] shadow-xl shadow-red-900/30 transition-all hover:-translate-y-0.5 disabled:opacity-60 disabled:translate-y-0 flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
@@ -137,9 +139,9 @@ export default function AdminLoginPage() {
             </button>
           </form>
 
-          <div className="mt-5 pt-5 border-t border-white/5 text-center">
+          <div className="mt-5 pt-5 border-t border-[var(--border)] text-center">
             <p className="text-xs text-slate-600">
-              Demo credentials: <span className="text-slate-400">admin / xplore2025</span>
+              Demo credentials: <span className="text-[var(--text-muted)]">admin / xplore2025</span>
             </p>
           </div>
         </div>
@@ -148,7 +150,7 @@ export default function AdminLoginPage() {
         <div className="text-center mt-5">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs text-[var(--text-muted)] hover:text-[var(--text-base)] transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             Back to Assessment

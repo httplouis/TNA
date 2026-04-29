@@ -10,6 +10,7 @@ import {
   Download, TrendingUp, BarChart3,
 } from "lucide-react";
 import { getSubmissions, exportToCSV, ALL_CATEGORIES, type Submission } from "@/lib/tna-data";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 type FilterStatus = "all" | "pending" | "reviewed" | "approved" | "sent";
 type AdminView    = "dashboard" | "submissions" | "history" | "settings";
@@ -53,14 +54,14 @@ function DonutChart({ data }: { data: { label: string; value: number; color: str
           offset += pct;
           return el;
         })}
-        <text x={cx} y={cy + 6} textAnchor="middle" fill="white" fontSize="18" fontWeight="bold">{total}</text>
+        <text x={cx} y={cy + 6} textAnchor="middle" fill="var(--text-base)" fontSize="18" fontWeight="bold">{total}</text>
       </svg>
       <div className="space-y-2">
         {data.map(({ label, value, color }) => (
           <div key={label} className="flex items-center gap-2 text-xs">
             <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-            <span className="text-slate-400">{label}</span>
-            <span className="font-bold text-white ml-auto pl-3">{value}</span>
+            <span className="text-[var(--text-muted)]">{label}</span>
+            <span className="font-bold ml-auto pl-3" style={{ color: 'var(--text-base)' }}>{value}</span>
           </div>
         ))}
       </div>
@@ -91,16 +92,16 @@ function CategoryBarChart({ submissions }: { submissions: Submission[] }) {
         return (
           <div key={cat}>
             <div className="flex justify-between text-xs mb-1.5">
-              <span className="text-slate-300 truncate max-w-[70%]">{cat}</span>
+              <span className="text-[var(--text-base)] truncate max-w-[70%]">{cat}</span>
               <span className="font-semibold ml-2" style={{ color }}>{avg}/5</span>
             </div>
-            <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+            <div className="h-1.5 bg-[var(--bg-surface)] rounded-full overflow-hidden">
               <div className="h-full rounded-full bar-animate" style={{ width: `${pct}%`, backgroundColor: color }} />
             </div>
           </div>
         );
       })}
-      <p className="text-xs text-slate-600 pt-2 border-t border-white/5">Showing Top 5 Weakest Areas (Higher score = less experienced)</p>
+      <p className="text-xs text-slate-600 pt-2 border-t border-[var(--border)]">Showing Top 5 Weakest Areas (Higher score = less experienced)</p>
     </div>
   );
 }
@@ -158,16 +159,16 @@ function NeedsTrainingBarChart({ submissions }: { submissions: Submission[] }) {
         return (
           <div key={cat}>
             <div className="flex justify-between text-xs mb-1.5">
-              <span className="text-slate-300 truncate max-w-[80%]">{cat}</span>
+              <span className="text-[var(--text-base)] truncate max-w-[80%]">{cat}</span>
               <span className="font-semibold ml-2" style={{ color }}>{pct}%</span>
             </div>
-            <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+            <div className="h-1.5 bg-[var(--bg-surface)] rounded-full overflow-hidden">
               <div className="h-full rounded-full bar-animate" style={{ width: `${pct}%`, backgroundColor: color }} />
             </div>
           </div>
         );
       })}
-      <p className="text-xs text-slate-600 pt-2 border-t border-white/5">Showing Top 5 Highest Priority Training Needs</p>
+      <p className="text-xs text-slate-600 pt-2 border-t border-[var(--border)]">Showing Top 5 Highest Priority Training Needs</p>
     </div>
   );
 }
@@ -189,20 +190,20 @@ function SubmissionsTable({ submissions, search, setSearch, filterStatus, setFil
 
   return (
     <div className="glass-card overflow-hidden">
-      <div className="px-6 py-4 border-b border-white/5 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-        <h2 className="text-sm font-bold text-white flex items-center gap-2">
+      <div className="px-6 py-4 border-b border-[var(--border)] flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+        <h2 className="text-sm font-bold text-[var(--text-base)] flex items-center gap-2">
           <ClipboardList className="w-4 h-4 text-[#60a5fa]" /> All Submissions
         </h2>
         <div className="flex gap-2 w-full sm:w-auto">
           <div className="relative flex-1 sm:flex-none">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--text-muted)]" />
             <input type="text" placeholder="Search name, client, email…" value={search} onChange={e => setSearch(e.target.value)}
-              className="pl-8 pr-3 py-2 w-full sm:w-52 text-xs rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-[#1d6eb5]/40 transition-all" />
+              className="pl-8 pr-3 py-2 w-full sm:w-52 text-xs rounded-lg bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--text-base)] placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-[#1d6eb5]/40 transition-all" />
           </div>
           <div className="relative">
-            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500 pointer-events-none" />
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--text-muted)] pointer-events-none" />
             <select value={filterStatus} onChange={e => setFilter(e.target.value as FilterStatus)}
-              className="pl-8 pr-3 py-2 text-xs rounded-lg bg-white/5 border border-white/10 text-slate-300 focus:outline-none appearance-none cursor-pointer">
+              className="pl-8 pr-3 py-2 text-xs rounded-lg bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--text-base)] focus:outline-none appearance-none cursor-pointer">
               <option value="all">All Status</option>
               <option value="pending">Pending</option>
               <option value="reviewed">Reviewed</option>
@@ -216,35 +217,35 @@ function SubmissionsTable({ submissions, search, setSearch, filterStatus, setFil
       {filtered.length === 0 ? (
         <div className="py-16 text-center">
           <ClipboardList className="w-10 h-10 text-slate-700 mx-auto mb-3" />
-          <p className="text-slate-500 text-sm">{submissions.length === 0 ? "No submissions yet." : "No results match your filters."}</p>
+          <p className="text-[var(--text-muted)] text-sm">{submissions.length === 0 ? "No submissions yet." : "No results match your filters."}</p>
         </div>
       ) : (
         <div className="overflow-x-auto pb-4">
           <table className="w-full text-sm min-w-max">
             <thead>
-              <tr className="border-b border-white/5">
-                <th className="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider sticky left-0 bg-[#0a1628] z-10">Trainee / Client</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Submitted</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+              <tr className="border-b border-[var(--border)]">
+                <th className="text-left px-6 py-3 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider sticky left-0 z-10" style={{ backgroundColor: "var(--bg-surface)" }}>Trainee / Client</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Submitted</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Status</th>
                 {isSpreadsheet && ALL_CATEGORIES.map(cat => (
-                  <th key={cat} className="text-center px-3 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider max-w-[80px] truncate" title={cat}>
+                  <th key={cat} className="text-center px-3 py-3 text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider max-w-[80px] truncate" title={cat}>
                     {cat.split(' ').slice(0, 2).join(' ')}
                   </th>
                 ))}
-                <th className="px-4 py-3 sticky right-0 bg-[#0a1628] z-10" />
+                <th className="px-4 py-3 sticky right-0 z-10" style={{ backgroundColor: "var(--bg-surface)" }} />
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-[var(--border)]">
               {filtered.map(sub => {
                 const cfg = STATUS_CONFIG[sub.status];
                 const Icon = cfg.icon;
                 return (
-                  <tr key={sub.id} className="hover:bg-white/[0.04] transition-colors group">
-                    <td className="px-6 py-4 sticky left-0 bg-[#0c1220] group-hover:bg-[#121c2e] transition-colors z-10">
-                      <p className="font-medium text-white">{sub.participantInfo.traineeName}</p>
-                      <p className="text-xs text-slate-500 mt-0.5">{sub.participantInfo.clientName} · {sub.participantInfo.jobTitle}</p>
+                  <tr key={sub.id} className="hover:bg-[var(--bg-hover)] transition-colors group">
+                    <td className="px-6 py-4 sticky left-0 bg-[var(--bg-page)] group-hover:bg-[var(--bg-hover)] transition-colors z-10">
+                      <p className="font-medium text-[var(--text-base)]">{sub.participantInfo.traineeName}</p>
+                      <p className="text-xs text-[var(--text-muted)] mt-0.5">{sub.participantInfo.clientName} · {sub.participantInfo.jobTitle}</p>
                     </td>
-                    <td className="px-4 py-4 text-xs text-slate-400 whitespace-nowrap">{formatDate(sub.submittedAt)}</td>
+                    <td className="px-4 py-4 text-xs text-[var(--text-muted)] whitespace-nowrap">{formatDate(sub.submittedAt)}</td>
                     <td className="px-4 py-4">
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap"
                         style={{ color: cfg.color, backgroundColor: cfg.bg, border: `1px solid ${cfg.border}` }}>
@@ -265,7 +266,7 @@ function SubmissionsTable({ submissions, search, setSearch, filterStatus, setFil
                         </td>
                       );
                     })}
-                    <td className="px-4 py-4 sticky right-0 bg-[#0c1220] group-hover:bg-[#121c2e] transition-colors z-10 text-right">
+                    <td className="px-4 py-4 sticky right-0 bg-[var(--bg-page)] group-hover:bg-[var(--bg-hover)] transition-colors z-10 text-right">
                       <Link href={`/admin/submissions/${sub.id}`} id={`btn-review-${sub.id}`}
                         className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-[#1d6eb5]/20 hover:bg-[#1d6eb5]/40 text-[#60a5fa] transition-all whitespace-nowrap">
                         Review <ChevronRight className="w-3 h-3" />
@@ -315,21 +316,21 @@ function HistoryView({ submissions }: { submissions: Submission[] }) {
 
   return (
     <div className="space-y-6">
-      <div className="glass-card p-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between bg-white/[0.02]">
+      <div className="glass-card p-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between bg-[var(--bg-card)]">
         <div>
-          <h3 className="text-lg font-bold text-white mb-1 flex items-center gap-2">
+          <h3 className="text-lg font-bold text-[var(--text-base)] mb-1 flex items-center gap-2">
             <FolderOpen className="w-5 h-5 text-[#60a5fa]" /> Submission History
           </h3>
-          <p className="text-sm text-slate-400">View submissions grouped by month. Use the filters to find specific records.</p>
+          <p className="text-sm text-[var(--text-muted)]">View submissions grouped by month. Use the filters to find specific records.</p>
         </div>
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <select value={filterMonth} onChange={e => setFilterMonth(e.target.value)}
-            className="flex-1 sm:flex-none px-3 py-2 text-xs rounded-lg bg-white/5 border border-white/10 text-slate-300 focus:outline-none appearance-none cursor-pointer">
+            className="flex-1 sm:flex-none px-3 py-2 text-xs rounded-lg bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--text-base)] focus:outline-none appearance-none cursor-pointer">
             <option value="All Months">All Months</option>
             {availableMonths.map(m => <option key={m} value={m}>{m}</option>)}
           </select>
           <select value={filterYear} onChange={e => setFilterYear(e.target.value)}
-            className="flex-1 sm:flex-none px-3 py-2 text-xs rounded-lg bg-white/5 border border-white/10 text-slate-300 focus:outline-none appearance-none cursor-pointer">
+            className="flex-1 sm:flex-none px-3 py-2 text-xs rounded-lg bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--text-base)] focus:outline-none appearance-none cursor-pointer">
             <option value="All Years">All Years</option>
             {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
           </select>
@@ -339,7 +340,7 @@ function HistoryView({ submissions }: { submissions: Submission[] }) {
       {keys.length === 0 ? (
         <div className="py-16 text-center">
           <FolderOpen className="w-10 h-10 text-slate-700 mx-auto mb-3" />
-          <p className="text-slate-500 text-sm">No submissions found for the selected date range.</p>
+          <p className="text-[var(--text-muted)] text-sm">No submissions found for the selected date range.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -349,26 +350,26 @@ function HistoryView({ submissions }: { submissions: Submission[] }) {
             return (
               <div key={month} className="glass-card overflow-hidden">
                 <button onClick={() => setOpenFolder(isOpen ? null : month)}
-                  className="w-full px-6 py-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors">
+                  className="w-full px-6 py-4 flex items-center justify-between hover:bg-[var(--bg-card)] transition-colors">
                   <div className="flex items-center gap-3">
                     <FolderOpen className="w-5 h-5 text-[#60a5fa]" />
                     <div className="text-left">
-                      <p className="text-sm font-semibold text-white">{month}</p>
-                      <p className="text-xs text-slate-500">{subs.length} submission{subs.length !== 1 ? "s" : ""}</p>
+                      <p className="text-sm font-semibold text-[var(--text-base)]">{month}</p>
+                      <p className="text-xs text-[var(--text-muted)]">{subs.length} submission{subs.length !== 1 ? "s" : ""}</p>
                     </div>
                   </div>
-                  <ChevronRight className={`w-4 h-4 text-slate-500 transition-transform ${isOpen ? "rotate-90" : ""}`} />
+                  <ChevronRight className={`w-4 h-4 text-[var(--text-muted)] transition-transform ${isOpen ? "rotate-90" : ""}`} />
                 </button>
                 {isOpen && (
-                  <div className="border-t border-white/5 divide-y divide-white/5">
+                  <div className="border-t border-[var(--border)] divide-y divide-white/5">
                     {subs.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()).map(sub => {
                       const cfg = STATUS_CONFIG[sub.status];
                       const Icon = cfg.icon;
                       return (
                         <div key={sub.id} className="px-6 py-3 flex items-center justify-between gap-4">
                           <div>
-                            <p className="text-sm font-medium text-white">{sub.participantInfo.traineeName}</p>
-                            <p className="text-xs text-slate-500">{sub.participantInfo.clientName} · {formatDate(sub.submittedAt)}</p>
+                            <p className="text-sm font-medium text-[var(--text-base)]">{sub.participantInfo.traineeName}</p>
+                            <p className="text-xs text-[var(--text-muted)]">{sub.participantInfo.clientName} · {formatDate(sub.submittedAt)}</p>
                           </div>
                           <div className="flex items-center gap-3 flex-shrink-0">
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold"
@@ -376,7 +377,7 @@ function HistoryView({ submissions }: { submissions: Submission[] }) {
                               <Icon className="w-3 h-3" />{cfg.label}
                             </span>
                             <Link href={`/admin/submissions/${sub.id}`}
-                              className="text-xs text-[#60a5fa] hover:text-white transition-colors">
+                              className="text-xs text-[#60a5fa] hover:text-[var(--text-base)] transition-colors">
                               View →
                             </Link>
                           </div>
@@ -399,20 +400,13 @@ function SettingsView({ onLogout }: { onLogout: () => void }) {
   return (
     <div className="max-w-xl space-y-6">
       <div className="glass-card p-6">
-        <h3 className="text-sm font-bold text-white mb-1">AI Training Suggestions</h3>
-        <p className="text-xs text-slate-400 mb-4">Gemini API integration — coming soon. Will enable AI-generated training recommendations per submission.</p>
-        <div className="px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-xs text-slate-500">
-          🔮 Gemini API key configuration will be available in a future update.
-        </div>
-      </div>
-      <div className="glass-card p-6">
-        <h3 className="text-sm font-bold text-white mb-1 flex items-center gap-2"><Download className="w-4 h-4 text-[#60a5fa]" /> Data Export</h3>
-        <p className="text-xs text-slate-400 mb-4">Export all submissions as a CSV file compatible with Excel.</p>
+        <h3 className="text-sm font-bold text-[var(--text-base)] mb-1 flex items-center gap-2"><Download className="w-4 h-4 text-[#60a5fa]" /> Data Export</h3>
+        <p className="text-xs text-[var(--text-muted)] mb-4">Export all submissions as a CSV file compatible with Excel.</p>
         <ExportButton />
       </div>
       <div className="glass-card p-6">
-        <h3 className="text-sm font-bold text-white mb-1">Session</h3>
-        <p className="text-xs text-slate-400 mb-4">You are logged in as the system administrator.</p>
+        <h3 className="text-sm font-bold text-[var(--text-base)] mb-1">Session</h3>
+        <p className="text-xs text-[var(--text-muted)] mb-4">You are logged in as the system administrator.</p>
         <button onClick={onLogout}
           className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all">
           <LogOut className="w-4 h-4" /> Sign Out
@@ -470,30 +464,32 @@ export default function AdminDashboardPage() {
   ];
 
   if (loading) return (
-    <div className="min-h-screen bg-[#0c1220] flex items-center justify-center">
+    <div className="min-h-screen bg-[var(--bg-page)] flex items-center justify-center">
       <div className="w-8 h-8 border-2 border-[#1d6eb5]/30 border-t-[#1d6eb5] rounded-full animate-spin" />
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-[#0c1220] text-slate-100">
+    <div className="min-h-screen transition-colors duration-300" style={{ backgroundColor: 'var(--bg-page)', color: 'var(--text-base)' }}>
       {/* Sidebar */}
-      <aside className="fixed left-0 top-0 h-screen w-[200px] bg-[#0a1628] border-r border-[#1e2f4a] flex flex-col z-40">
-        <div className="px-5 py-5 border-b border-[#1e2f4a]">
-          <Image src="/informatics-logo.png" alt="Informatics" width={120} height={32} className="h-7 w-auto object-contain brightness-0 invert opacity-80" />
-          <span className="text-[9px] text-slate-500 block mt-1 tracking-widest uppercase">Admin Panel</span>
+      <aside className="fixed left-0 top-0 h-screen w-[200px] flex flex-col z-40 transition-colors duration-300" style={{ backgroundColor: 'var(--bg-surface)', borderRight: '1px solid var(--border)' }}>
+        <div className="px-5 py-5" style={{ borderBottom: '1px solid var(--border)' }}>
+          <Image src="/informatics-logo.png" alt="Informatics" width={120} height={32} className="h-7 w-auto object-contain dark:brightness-100 brightness-0" />
+          <span className="text-[9px] block mt-1 tracking-widest uppercase" style={{ color: 'var(--text-muted)' }}>Admin Panel</span>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1">
           {navItems.map(({ id, label, icon: Icon }) => (
             <button key={id} onClick={() => setView(id)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-left ${view === id ? "bg-[#1d6eb5]/20 text-[#60a5fa] border border-[#1d6eb5]/30" : "text-slate-400 hover:bg-white/5 hover:text-white"}`}>
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-left ${view === id ? "bg-[#1d6eb5]/20 text-[#60a5fa] border border-[#1d6eb5]/30" : "hover:bg-[var(--bg-hover)]"}`}
+              style={view !== id ? { color: 'var(--text-muted)' } : {}}>
               <Icon className="w-4 h-4" />{label}
             </button>
           ))}
         </nav>
         <div className="px-3 pb-5">
           <button onClick={handleLogout} id="btn-admin-logout"
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-500 hover:bg-white/5 hover:text-slate-200 transition-all">
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-[var(--bg-hover)] transition-all"
+            style={{ color: 'var(--text-muted)' }}>
             <LogOut className="w-4 h-4" /> Sign Out
           </button>
         </div>
@@ -501,15 +497,16 @@ export default function AdminDashboardPage() {
 
       {/* Main */}
       <main className="ml-[200px] min-h-screen">
-        <header className="sticky top-0 z-30 bg-[#0c1220]/95 backdrop-blur border-b border-white/5 px-8 h-14 flex items-center justify-between">
+        <header className="sticky top-0 z-30 backdrop-blur px-8 h-14 flex items-center justify-between transition-colors duration-300" style={{ backgroundColor: 'var(--bg-nav)', borderBottom: '1px solid var(--border)' }}>
           <div className="flex items-center gap-3">
-            {navItems.find(n => n.id === view) && (() => { const n = navItems.find(n => n.id === view)!; const Icon = n.icon; return <><Icon className="w-4 h-4 text-slate-500" /><h1 className="text-sm font-semibold text-white">{n.label}</h1></>; })()}
+            {navItems.find(n => n.id === view) && (() => { const n = navItems.find(n => n.id === view)!; const Icon = n.icon; return <><Icon className="w-4 h-4 text-[var(--text-muted)]" /><h1 className="text-sm font-semibold text-[var(--text-base)]">{n.label}</h1></>; })()}
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={refresh} className="text-xs text-slate-500 hover:text-slate-300 transition-colors">Refresh</button>
+            <button onClick={refresh} className="text-xs text-[var(--text-muted)] hover:text-slate-700 dark:hover:text-slate-300 transition-colors">Refresh</button>
             <ExportButton />
-            <div className="flex items-center gap-2 text-xs text-slate-500">
-              <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />Logged in as Admin
+            <ThemeToggle />
+            <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] ml-2 border-l border-[var(--border)] pl-4">
+              <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />Admin
             </div>
           </div>
         </header>
@@ -528,8 +525,8 @@ export default function AdminDashboardPage() {
                 ].map(({ label, value, icon: Icon, color }) => (
                   <div key={label} className="glass-card p-5 flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-xs text-slate-500 mb-1">{label}</p>
-                      <p className="text-3xl font-bold text-white">{value}</p>
+                      <p className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>{label}</p>
+                      <p className="text-3xl font-bold" style={{ color: 'var(--text-base)' }}>{value}</p>
                     </div>
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: color + "20" }}>
                       <Icon className="w-5 h-5" style={{ color }} />
@@ -542,7 +539,7 @@ export default function AdminDashboardPage() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                 {/* Status Donut */}
                 <div className="glass-card p-6">
-                  <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-[var(--text-base)] mb-4 flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 text-[#60a5fa]" /> Status Breakdown
                   </h3>
                   <DonutChart data={[
@@ -555,7 +552,7 @@ export default function AdminDashboardPage() {
 
                 {/* Rating Distribution Donut */}
                 <div className="glass-card p-6">
-                  <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-[var(--text-base)] mb-4 flex items-center gap-2">
                     <BarChart3 className="w-4 h-4 text-[#60a5fa]" /> Rating Distribution
                   </h3>
                   <RatingDistributionPieChart submissions={submissions} />
@@ -563,7 +560,7 @@ export default function AdminDashboardPage() {
 
                 {/* Category Scores */}
                 <div className="glass-card p-6">
-                  <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-[var(--text-base)] mb-4 flex items-center gap-2">
                     <BarChart3 className="w-4 h-4 text-[#60a5fa]" /> Avg Score by Category
                   </h3>
                   <CategoryBarChart submissions={submissions} />
@@ -571,7 +568,7 @@ export default function AdminDashboardPage() {
 
                 {/* Needs Training Percentages */}
                 <div className="glass-card p-6">
-                  <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-[var(--text-base)] mb-4 flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 text-[#ef4444]" /> Needs Training (% of Users)
                   </h3>
                   <NeedsTrainingBarChart submissions={submissions} />
@@ -585,11 +582,11 @@ export default function AdminDashboardPage() {
 
           {view === "submissions" && (
             <div className="space-y-6">
-              <div className="glass-card p-6 bg-white/[0.02]">
-                <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
+              <div className="glass-card p-6 bg-[var(--bg-card)]">
+                <h3 className="text-lg font-bold text-[var(--text-base)] mb-2 flex items-center gap-2">
                   <ClipboardList className="w-5 h-5 text-[#60a5fa]" /> Spreadsheet View
                 </h3>
-                <p className="text-sm text-slate-400">View all submissions and their individual category scores horizontally. Click <strong>Review</strong> to see detailed answers.</p>
+                <p className="text-sm text-[var(--text-muted)]">View all submissions and their individual category scores horizontally. Click <strong>Review</strong> to see detailed answers.</p>
               </div>
               <SubmissionsTable submissions={submissions} search={search} setSearch={setSearch} filterStatus={filterStatus} setFilter={setFilter} isSpreadsheet={true} />
             </div>

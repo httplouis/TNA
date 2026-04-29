@@ -17,14 +17,14 @@ function Field({ id, label, icon: Icon, type = "text", placeholder, value, onCha
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-slate-300 mb-1.5" htmlFor={id}>
-        <Icon className="w-3.5 h-3.5 inline mr-1.5 text-slate-500" />
+      <label className="block text-sm font-medium text-[var(--text-base)] mb-1.5" htmlFor={id}>
+        <Icon className="w-3.5 h-3.5 inline mr-1.5 text-[var(--text-muted)]" />
         {label}{required && <span className="text-red-400 ml-1">*</span>}
       </label>
       <input
         id={id} type={type} placeholder={placeholder} value={value}
         onChange={e => onChange(e.target.value)}
-        className={`w-full px-4 py-3 rounded-xl bg-white/5 border text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-[#1d6eb5]/50 transition-all ${error ? "border-red-500/60" : "border-white/10 focus:border-[#1d6eb5]/40"}`}
+        className={`w-full px-4 py-3 rounded-xl bg-[var(--bg-surface)] border text-sm text-[var(--text-base)] placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-[#1d6eb5]/50 transition-all ${error ? "border-red-500/60" : "border-[var(--border)] focus:border-[#1d6eb5]/40"}`}
       />
       {error && <p className="text-xs text-red-400 mt-1 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{error}</p>}
     </div>
@@ -38,20 +38,20 @@ export default function InfoStep({ info, onChange, errors, onBack, onNext }: Pro
       <div className="mb-2">
         <span className="text-xs font-bold text-[#60a5fa] uppercase tracking-widest">Section 1 of 7</span>
       </div>
-      <h2 className="text-2xl font-bold text-white mb-1">Informatics Corporate Training</h2>
-      <p className="text-slate-400 text-sm mb-8">Please provide your information below. Fields marked <span className="text-red-400">*</span> are required.</p>
+      <h2 className="text-2xl font-bold text-[var(--text-base)] mb-1">Informatics Corporate Training</h2>
+      <p className="text-[var(--text-muted)] text-sm mb-8">Please provide your information below. Fields marked <span className="text-red-400">*</span> are required.</p>
 
       <div className="space-y-5">
         <Field id="input-client"    label="Client Name"       icon={Users}     placeholder="Name or company name"     value={info.clientName}      onChange={set("clientName")}      error={errors.clientName}      required />
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1.5" htmlFor="input-address">
-            <MapPin className="w-3.5 h-3.5 inline mr-1.5 text-slate-500" />
+          <label className="block text-sm font-medium text-[var(--text-base)] mb-1.5" htmlFor="input-address">
+            <MapPin className="w-3.5 h-3.5 inline mr-1.5 text-[var(--text-muted)]" />
             Address<span className="text-red-400 ml-1">*</span>
           </label>
           <textarea
             id="input-address" rows={3} placeholder="Street, City, Province, ZIP Code"
             value={info.address} onChange={e => onChange({ ...info, address: e.target.value })}
-            className={`w-full px-4 py-3 rounded-xl bg-white/5 border text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-[#1d6eb5]/50 transition-all resize-none ${errors.address ? "border-red-500/60" : "border-white/10 focus:border-[#1d6eb5]/40"}`}
+            className={`w-full px-4 py-3 rounded-xl bg-[var(--bg-surface)] border text-sm text-[var(--text-base)] placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-[#1d6eb5]/50 transition-all resize-none ${errors.address ? "border-red-500/60" : "border-[var(--border)] focus:border-[#1d6eb5]/40"}`}
           />
           {errors.address && <p className="text-xs text-red-400 mt-1 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.address}</p>}
         </div>
@@ -65,8 +65,8 @@ export default function InfoStep({ info, onChange, errors, onBack, onNext }: Pro
       </div>
 
       <div className="flex gap-3 mt-8">
-        <button onClick={onBack} className="px-5 py-3 rounded-xl text-sm font-medium border border-white/10 text-slate-400 hover:text-white hover:border-white/20 transition-all">Back</button>
-        <button id="btn-info-next" onClick={onNext} className="flex-1 py-3 rounded-xl font-semibold text-sm bg-[#1d6eb5] hover:bg-[#1a5fa0] text-white shadow-xl shadow-blue-900/30 transition-all hover:-translate-y-0.5">
+        <button onClick={onBack} className="px-5 py-3 rounded-xl text-sm font-medium border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-base)] hover:border-white/20 transition-all">Back</button>
+        <button id="btn-info-next" onClick={onNext} className="flex-1 py-3 rounded-xl font-semibold text-sm bg-[#1d6eb5] hover:bg-[#1a5fa0] text-[var(--text-base)] shadow-xl shadow-blue-900/30 transition-all hover:-translate-y-0.5">
           Start Assessment →
         </button>
       </div>
