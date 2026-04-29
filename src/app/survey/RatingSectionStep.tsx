@@ -78,11 +78,11 @@ export default function RatingSectionStep({
 
                   return (
                     <div key={q.id} className={`glass-card p-5 ${q.isSummary ? "border-[#1d6eb5]/30 bg-[#1d6eb5]/5" : ""}`}>
-                      <p className="text-sm font-medium text-slate-200 mb-4 leading-relaxed">
+                      <p className="text-sm font-medium text-[var(--text-base)] mb-4 leading-relaxed">
                         {!q.isSummary && <span className="text-[var(--text-muted)] mr-2">{qi + 1}.</span>}
                         {q.isSummary && <span className="text-[#60a5fa] text-xs font-bold uppercase mr-2">Overall</span>}
                         {q.text}
-                        <span className="text-slate-600 text-xs ml-2">(optional)</span>
+                        <span className="text-[var(--text-muted)] text-xs ml-2">(optional)</span>
                       </p>
 
                       {/* Rating buttons 1-5 */}
