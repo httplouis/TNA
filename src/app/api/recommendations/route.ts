@@ -23,18 +23,13 @@ Return the response STRICTLY as a JSON object with this exact structure:
 }`;
 
         const response = await ai.models.generateContent({
-            model: "gemini-2.0-flash",
+            model: "gemini-2.5-flash",
             contents: prompt,
-            config: {
-                responseMimeType: "application/json",
-            }
+            config: { responseMimeType: "application/json" },
         });
 
         const rawText = response.text ?? "";
-
-        // Strip markdown code fences if present
         const cleaned = rawText.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```\s*$/i, "").trim();
-
         const aiData = JSON.parse(cleaned || "{}");
         return NextResponse.json({ aiData });
     } catch (error) {
