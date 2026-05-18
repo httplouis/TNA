@@ -23,7 +23,11 @@ type Step = "privacy" | "info" | "section2" | "section3" | "section4" | "section
 const STEP_ORDER: Step[] = ["privacy", "info", "section2", "section3", "section4", "section5", "section6", "section7", "review", "submitting"];
 const SECTION_STEPS: Step[] = ["section2", "section3", "section4", "section5", "section6"];
 
-const EMPTY_INFO: ParticipantInfo = { clientName: "", address: "", traineeName: "", jobTitle: "", mobileNumber: "", telephoneNumber: "", email: "" };
+const EMPTY_INFO: ParticipantInfo = {
+  clientName: "", address: "", traineeName: "", jobTitle: "",
+  mobileNumber: "", telephoneNumber: "", email: "",
+  rank: "", ageBracket: "", positionClassification: "",
+};
 const EMPTY_OPEN: OpenAnswers = { tasksPerformed: "", trainingGoals: "" };
 const DRAFT_KEY = "tna_survey_draft_v2";
 
@@ -94,12 +98,15 @@ export default function SurveyPage() {
 
   function validateInfo(): boolean {
     const e: Partial<Record<keyof ParticipantInfo, string>> = {};
-    if (!info.clientName.trim())   e.clientName  = "Client name is required.";
-    if (!info.address.trim())      e.address     = "Address is required.";
-    if (!info.traineeName.trim())  e.traineeName = "Trainee name is required.";
-    if (!info.jobTitle.trim())     e.jobTitle    = "Job title is required.";
-    if (!info.email.trim())        e.email       = "Email is required.";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(info.email)) e.email = "Enter a valid email.";
+    if (!info.clientName.trim())              e.clientName              = "Client name is required.";
+    if (!info.address.trim())                 e.address                 = "Address is required.";
+    if (!info.traineeName.trim())             e.traineeName             = "Trainee name is required.";
+    if (!info.jobTitle.trim())                e.jobTitle                = "Job title is required.";
+    if (!info.rank?.trim())                   e.rank                    = "Rank is required.";
+    if (!info.ageBracket?.trim())             e.ageBracket              = "Age bracket is required.";
+    if (!info.positionClassification?.trim()) e.positionClassification  = "Position classification is required.";
+    if (!info.email.trim())                   e.email                   = "Email is required.";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(info.email)) e.email   = "Enter a valid email.";
     setInfoErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -149,11 +156,13 @@ export default function SurveyPage() {
       jobTitle: "Data Analyst",
       mobileNumber: "09123456789",
       telephoneNumber: "",
-      email: "johndoe@example.com"
+      email: "johndoe@example.com",
+      rank: "Senior Analyst",
+      ageBracket: "25–34",
+      positionClassification: "Technical",
     });
     const testResponses: Record<string, Response> = {};
     QUESTIONS.forEach(q => {
-      // Randomly assign a rating between 1 and 5
       const rating = (Math.floor(Math.random() * 5) + 1) as SkillLevel;
       testResponses[q.id] = { questionId: q.id, rating };
     });

@@ -7,13 +7,20 @@ import Image from "next/image";
 import {
   LayoutDashboard, ClipboardList, CheckCircle2, Clock, Send, LogOut,
   Eye, Users, Search, Filter, ChevronRight, FolderOpen, Settings,
-  Download, TrendingUp, BarChart3,
+  Download, TrendingUp, BarChart3, AlertTriangle, Upload,
 } from "lucide-react";
-import { getSubmissions, exportToCSV, ALL_CATEGORIES, type Submission } from "@/lib/tna-data";
+import {
+  getSubmissions, exportToCSV, ALL_CATEGORIES, computeOverallLevel,
+  computeResults, getCategoryLevelBreakdown,
+  type Submission,
+} from "@/lib/tna-data";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { RatingDistributionChart } from "@/components/dashboard/RatingDistributionChart";
+import { SkillLevelBreakdown } from "@/components/dashboard/SkillLevelBreakdown";
+import { CsvUploadView } from "@/components/dashboard/CsvUploadView";
 
 type FilterStatus = "all" | "pending" | "reviewed" | "approved" | "sent";
-type AdminView    = "dashboard" | "submissions" | "history" | "settings";
+type AdminView    = "dashboard" | "submissions" | "history" | "csv" | "settings";
 
 const STATUS_CONFIG = {
   pending:  { label: "Pending Review", color: "#f97316", bg: "rgba(249,115,22,0.15)", border: "rgba(249,115,22,0.3)", icon: Clock },
@@ -23,8 +30,8 @@ const STATUS_CONFIG = {
 };
 
 const LEVEL_COLORS: Record<string, string> = {
-  "Expert": "#3b82f6", "Proficient": "#22c55e", "Moderate": "#eab308",
-  "Developing": "#f97316", "Needs Training": "#ef4444",
+  "Advanced": "#3b82f6",
+  "Basic":    "#f97316",
 };
 
 function formatDate(iso: string) {
@@ -106,72 +113,7 @@ function CategoryBarChart({ submissions }: { submissions: Submission[] }) {
   );
 }
 
-// ── Rating Distribution Pie Chart ───────────────────────────────────────────────
-function RatingDistributionPieChart({ submissions }: { submissions: Submission[] }) {
-  const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-  let total = 0;
-  submissions.forEach(s => {
-    s.responses.forEach(r => {
-      counts[r.rating]++;
-      total++;
-    });
-  });
 
-  if (total === 0) return <div className="flex items-center justify-center h-32 text-slate-600 text-sm">No data yet</div>;
-
-  const data = [
-    { label: "Level 1 (Expert)", value: counts[1], color: "#3b82f6" },
-    { label: "Level 2 (Proficient)", value: counts[2], color: "#22c55e" },
-    { label: "Level 3 (Moderate)", value: counts[3], color: "#eab308" },
-    { label: "Level 4 (Developing)", value: counts[4], color: "#f97316" },
-    { label: "Level 5 (Needs Training)", value: counts[5], color: "#ef4444" },
-  ];
-
-  return <DonutChart data={data} />;
-}
-
-// ── Needs Training Bar Chart ──────────────────────────────────────────────────
-function NeedsTrainingBarChart({ submissions }: { submissions: Submission[] }) {
-  if (submissions.length === 0) return <p className="text-slate-600 text-sm text-center py-4">No data yet</p>;
-  
-  const needsTrainingPct = ALL_CATEGORIES.map(cat => {
-    let needsTrainingCount = 0;
-    let answeredCount = 0;
-    submissions.forEach(sub => {
-      const r = sub.results?.find(res => res.category === cat);
-      if (r && r.answeredCount > 0) {
-        answeredCount++;
-        if (r.avgScore > 2.9) needsTrainingCount++; // Moderate, Developing, Needs Training
-      }
-    });
-    const pct = answeredCount > 0 ? (needsTrainingCount / answeredCount) * 100 : 0;
-    return { cat, pct: Math.round(pct) };
-  }).filter(d => d.pct > 0).sort((a, b) => b.pct - a.pct);
-
-  if (needsTrainingPct.length === 0) return <p className="text-slate-600 text-sm text-center py-4">No trainees need training.</p>;
-
-  const top5 = needsTrainingPct.slice(0, 5);
-
-  return (
-    <div className="space-y-4">
-      {top5.map(({ cat, pct }) => {
-        const color = pct > 70 ? "#ef4444" : pct > 40 ? "#f97316" : "#eab308";
-        return (
-          <div key={cat}>
-            <div className="flex justify-between text-xs mb-1.5">
-              <span className="text-[var(--text-base)] truncate max-w-[80%]">{cat}</span>
-              <span className="font-semibold ml-2" style={{ color }}>{pct}%</span>
-            </div>
-            <div className="h-1.5 bg-[var(--bg-surface)] rounded-full overflow-hidden">
-              <div className="h-full rounded-full bar-animate" style={{ width: `${pct}%`, backgroundColor: color }} />
-            </div>
-          </div>
-        );
-      })}
-      <p className="text-xs text-slate-600 pt-2 border-t border-[var(--border)]">Showing Top 5 Highest Priority Training Needs</p>
-    </div>
-  );
-}
 // ── Submissions Table ─────────────────────────────────────────────────────────
 function SubmissionsTable({ submissions, search, setSearch, filterStatus, setFilter, isSpreadsheet = false }: {
   submissions: Submission[]; search: string; setSearch: (s: string) => void;
@@ -460,6 +402,7 @@ export default function AdminDashboardPage() {
     { id: "dashboard",   label: "Dashboard",   icon: LayoutDashboard },
     { id: "submissions", label: "Submissions",  icon: ClipboardList },
     { id: "history",     label: "History",      icon: FolderOpen },
+    { id: "csv",         label: "CSV Upload",   icon: Upload },
     { id: "settings",    label: "Settings",     icon: Settings },
   ];
 
@@ -535,8 +478,8 @@ export default function AdminDashboardPage() {
                 ))}
               </div>
 
-              {/* Charts */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              {/* Charts Row 1 — Status + Overall Classification */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 {/* Status Donut */}
                 <div className="glass-card p-6">
                   <h3 className="text-sm font-bold text-[var(--text-base)] mb-4 flex items-center gap-2">
@@ -550,29 +493,169 @@ export default function AdminDashboardPage() {
                   ]} />
                 </div>
 
-                {/* Rating Distribution Donut */}
+                {/* Overall Basic/Advanced Classification */}
                 <div className="glass-card p-6">
-                  <h3 className="text-sm font-bold text-[var(--text-base)] mb-4 flex items-center gap-2">
-                    <BarChart3 className="w-4 h-4 text-[#60a5fa]" /> Rating Distribution
+                  <h3 className="text-sm font-bold text-[var(--text-base)] mb-1 flex items-center gap-2">
+                    <BarChart3 className="w-4 h-4 text-[#60a5fa]" /> Overall Classification
                   </h3>
-                  <RatingDistributionPieChart submissions={submissions} />
+                  <p className="text-xs text-[var(--text-muted)] mb-4">Click a level to see respondent details &amp; training needs</p>
+                  <RatingDistributionChart submissions={submissions} />
                 </div>
+              </div>
 
-                {/* Category Scores */}
-                <div className="glass-card p-6">
-                  <h3 className="text-sm font-bold text-[var(--text-base)] mb-4 flex items-center gap-2">
-                    <BarChart3 className="w-4 h-4 text-[#60a5fa]" /> Avg Score by Category
-                  </h3>
-                  <CategoryBarChart submissions={submissions} />
-                </div>
+              {/* ── Analytics Row 2: Priority Areas + Demographics + Health ── */}
+              {submissions.length > 0 && (() => {
+                // Priority training areas — top 5 by Basic%
+                const breakdown = getCategoryLevelBreakdown(submissions);
+                const priorityAreas = ALL_CATEGORIES
+                  .map(cat => {
+                    const d = breakdown[cat] ?? { Advanced: 0, Basic: 0 };
+                    const total = (d.Advanced ?? 0) + (d.Basic ?? 0);
+                    const basicPct = total > 0 ? Math.round((d.Basic / total) * 100) : 0;
+                    return { cat, basic: d.Basic, total, basicPct };
+                  })
+                  .filter(d => d.total > 0)
+                  .sort((a, b) => b.basicPct - a.basicPct)
+                  .slice(0, 5);
 
-                {/* Needs Training Percentages */}
-                <div className="glass-card p-6">
-                  <h3 className="text-sm font-bold text-[var(--text-base)] mb-4 flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-[#ef4444]" /> Needs Training (% of Users)
-                  </h3>
-                  <NeedsTrainingBarChart submissions={submissions} />
-                </div>
+                // Demographics
+                const posMap: Record<string, number> = {};
+                const ageMap: Record<string, number> = {};
+                submissions.forEach(s => {
+                  const pos = s.participantInfo.positionClassification?.trim() || "Unspecified";
+                  const age = s.participantInfo.ageBracket?.trim() || "Unspecified";
+                  posMap[pos] = (posMap[pos] ?? 0) + 1;
+                  ageMap[age] = (ageMap[age] ?? 0) + 1;
+                });
+                const posEntries = Object.entries(posMap).sort((a, b) => b[1] - a[1]);
+                const ageEntries = Object.entries(ageMap).sort((a, b) => b[1] - a[1]);
+
+                // Overall health score
+                const allScores: number[] = [];
+                submissions.forEach(s => {
+                  const results = s.results ?? computeResults(s.responses);
+                  results.forEach(r => { if (r.answeredCount > 0) allScores.push(r.avgScore); });
+                });
+                const overallAvg = allScores.length > 0
+                  ? (allScores.reduce((a, b) => a + b, 0) / allScores.length)
+                  : 0;
+                const healthPct = overallAvg > 0 ? Math.round(((5 - overallAvg) / 4) * 100) : 0;
+                const healthColor = healthPct >= 70 ? "#34d399" : healthPct >= 40 ? "#fbbf24" : "#f87171";
+                const healthLabel = healthPct >= 70 ? "Strong" : healthPct >= 40 ? "Moderate" : "Needs Work";
+
+                return (
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                    {/* Priority Training Areas */}
+                    <div className="glass-card p-5">
+                      <h3 className="text-sm font-bold text-[var(--text-base)] mb-1 flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4 text-[#fbbf24]" /> Priority Training Areas
+                      </h3>
+                      <p className="text-xs text-[var(--text-muted)] mb-4">Categories with the most respondents needing training</p>
+                      <div className="space-y-3">
+                        {priorityAreas.map(({ cat, basic, total, basicPct }, i) => (
+                          <div key={cat}>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-xs text-[var(--text-base)] truncate max-w-[65%] font-medium">
+                                <span className="text-[var(--text-muted)] mr-1.5">#{i + 1}</span>{cat}
+                              </span>
+                              <span className="text-xs font-bold text-[#f87171] flex-shrink-0">{basic}/{total} ({basicPct}%)</span>
+                            </div>
+                            <div className="h-1.5 bg-[var(--bg-surface)] rounded-full overflow-hidden">
+                              <div className="h-full rounded-full" style={{ width: `${basicPct}%`, backgroundColor: "#f87171", opacity: 0.7 }} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Respondent Demographics */}
+                    <div className="glass-card p-5">
+                      <h3 className="text-sm font-bold text-[var(--text-base)] mb-1 flex items-center gap-2">
+                        <Users className="w-4 h-4 text-[#818cf8]" /> Respondent Demographics
+                      </h3>
+                      <p className="text-xs text-[var(--text-muted)] mb-4">Position classification and age distribution</p>
+                      <div className="space-y-4">
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2">By Position</p>
+                          <div className="space-y-1.5">
+                            {posEntries.slice(0, 4).map(([pos, count]) => (
+                              <div key={pos} className="flex items-center justify-between">
+                                <span className="text-xs text-[var(--text-base)] truncate max-w-[70%]">{pos}</span>
+                                <div className="flex items-center gap-2">
+                                  <div className="w-16 h-1.5 bg-[var(--bg-surface)] rounded-full overflow-hidden">
+                                    <div className="h-full rounded-full bg-[#818cf8]/70" style={{ width: `${(count / submissions.length) * 100}%` }} />
+                                  </div>
+                                  <span className="text-xs font-semibold text-[#818cf8] w-4 text-right">{count}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="border-t border-[var(--border)] pt-3">
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2">By Age Bracket</p>
+                          <div className="space-y-1.5">
+                            {ageEntries.slice(0, 4).map(([age, count]) => (
+                              <div key={age} className="flex items-center justify-between">
+                                <span className="text-xs text-[var(--text-base)]">{age}</span>
+                                <div className="flex items-center gap-2">
+                                  <div className="w-16 h-1.5 bg-[var(--bg-surface)] rounded-full overflow-hidden">
+                                    <div className="h-full rounded-full bg-[#7dd3fc]/70" style={{ width: `${(count / submissions.length) * 100}%` }} />
+                                  </div>
+                                  <span className="text-xs font-semibold text-[#7dd3fc] w-4 text-right">{count}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Overall Health Score */}
+                    <div className="glass-card p-5 flex flex-col">
+                      <h3 className="text-sm font-bold text-[var(--text-base)] mb-1 flex items-center gap-2">
+                        <TrendingUp className="w-4 h-4" style={{ color: healthColor }} /> Overall Skill Health
+                      </h3>
+                      <p className="text-xs text-[var(--text-muted)] mb-5">Mean proficiency across all categories (higher = more experienced)</p>
+                      <div className="flex-1 flex flex-col items-center justify-center gap-4">
+                        {/* Circular gauge */}
+                        <svg width="120" height="120" className="flex-shrink-0">
+                          <circle cx="60" cy="60" r="48" fill="none" stroke="var(--bg-surface)" strokeWidth="10" />
+                          <circle cx="60" cy="60" r="48" fill="none" stroke={healthColor} strokeWidth="10"
+                            strokeDasharray={`${(healthPct / 100) * 2 * Math.PI * 48} ${2 * Math.PI * 48}`}
+                            strokeDashoffset={2 * Math.PI * 48 * 0.25}
+                            strokeLinecap="round"
+                            style={{ transition: "stroke-dasharray 0.8s ease", opacity: 0.85 }}
+                          />
+                          <text x="60" y="55" textAnchor="middle" fill={healthColor} fontSize="22" fontWeight="bold">{healthPct}%</text>
+                          <text x="60" y="72" textAnchor="middle" fill="var(--text-muted)" fontSize="10">{healthLabel}</text>
+                        </svg>
+                        <div className="w-full space-y-1.5 text-xs">
+                          <div className="flex justify-between">
+                            <span className="text-[var(--text-muted)]">Mean score</span>
+                            <span className="font-bold" style={{ color: healthColor }}>{overallAvg.toFixed(2)} / 5</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-[var(--text-muted)]">Scale</span>
+                            <span className="text-[var(--text-muted)]">1 = Expert · 5 = No experience</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-[var(--text-muted)]">Total respondents</span>
+                            <span className="font-semibold text-[var(--text-base)]">{submissions.length}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Skill Level Breakdown — full width */}
+              <div className="glass-card p-6 mb-6">
+                <h3 className="text-sm font-bold text-[var(--text-base)] mb-1 flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4 text-[#60a5fa]" /> Skill Level by Category
+                </h3>
+                <p className="text-xs text-[var(--text-muted)] mb-4">Click any row to drill down into individual respondents for that category</p>
+                <SkillLevelBreakdown submissions={submissions} />
               </div>
 
               {/* Recent submissions */}
@@ -593,6 +676,18 @@ export default function AdminDashboardPage() {
           )}
 
           {view === "history" && <HistoryView submissions={submissions} />}
+
+          {view === "csv" && (
+            <div className="space-y-6">
+              <div className="glass-card p-6 bg-[var(--bg-card)]">
+                <h3 className="text-lg font-bold text-[var(--text-base)] mb-1 flex items-center gap-2">
+                  <Upload className="w-5 h-5 text-[#60a5fa]" /> CSV Upload — Isolated Analysis
+                </h3>
+                <p className="text-sm text-[var(--text-muted)]">Upload a CSV exported from this portal to analyze it in isolation. <strong>This does not affect the main dashboard or saved data.</strong></p>
+              </div>
+              <CsvUploadView />
+            </div>
+          )}
 
           {view === "settings" && <SettingsView onLogout={handleLogout} />}
         </div>

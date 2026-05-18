@@ -25,8 +25,8 @@ const STATUS_CONFIG: Record<TStatus, { label: string; color: string; bg: string;
 };
 
 const LEVEL_COLOR: Record<string, string> = {
-  "Expert": "#3b82f6", "Proficient": "#22c55e", "Moderate": "#eab308",
-  "Developing": "#f97316", "Needs Training": "#ef4444",
+  "Advanced": "#3b82f6",
+  "Basic":    "#f97316",
 };
 
 const LEVEL_LABELS: Record<number, string> = {
@@ -44,11 +44,11 @@ function formatDate(iso: string) {
 function generateEmailBody(sub: Submission): string {
   if (!sub.results) return "";
   const firstName = sub.participantInfo.traineeName.split(" ")[0] || sub.participantInfo.clientName;
-  const resultLines = sub.results.map(r => `  • ${r.category}: ${r.avgScore}/5 — ${r.level}`).join("\n");
+  const resultLines = sub.results.map(r => `  \u2022 ${r.category}: ${r.avgScore}/5 \u2014 ${r.level}`).join("\n");
   const recommendations = sub.results
-    .filter(r => !["Expert", "Proficient"].includes(r.level))
+    .filter(r => r.level === "Basic")
     .map(r => {
-      const programs = TRAINING_MAP[r.category as Category].map(p => `      - ${p}`).join("\n");
+      const programs = TRAINING_MAP[r.category as Category].basic.map(p => `      - ${p}`).join("\n");
       return `  ${r.category} (${r.level}):\n${programs}`;
     }).join("\n\n");
 
@@ -197,14 +197,17 @@ export default function SubmissionReviewPage({ params }: { params: Promise<{ id:
               </h2>
               <div className="space-y-3.5">
                 {[
-                  { icon: User,     label: "Client Name",  value: sub.participantInfo.clientName },
-                  { icon: MapPin,   label: "Address",       value: sub.participantInfo.address },
-                  { icon: User,     label: "Trainee Name",  value: sub.participantInfo.traineeName },
-                  { icon: Briefcase,label: "Job Title",     value: sub.participantInfo.jobTitle },
-                  { icon: Phone,    label: "Mobile",        value: sub.participantInfo.mobileNumber || "—" },
-                  { icon: Phone,    label: "Telephone",     value: sub.participantInfo.telephoneNumber || "—" },
-                  { icon: Mail,     label: "Email",         value: sub.participantInfo.email },
-                  { icon: Calendar, label: "Submitted",     value: formatDate(sub.submittedAt) },
+                  { icon: User,     label: "Client Name",            value: sub.participantInfo.clientName },
+                  { icon: MapPin,   label: "Address",                 value: sub.participantInfo.address },
+                  { icon: User,     label: "Trainee Name",            value: sub.participantInfo.traineeName },
+                  { icon: Briefcase,label: "Job Title",               value: sub.participantInfo.jobTitle },
+                  { icon: Briefcase,label: "Rank",                    value: sub.participantInfo.rank || "—" },
+                  { icon: Calendar, label: "Age Bracket",             value: sub.participantInfo.ageBracket || "—" },
+                  { icon: User,     label: "Position Classification", value: sub.participantInfo.positionClassification || "—" },
+                  { icon: Phone,    label: "Mobile",                  value: sub.participantInfo.mobileNumber || "—" },
+                  { icon: Phone,    label: "Telephone",               value: sub.participantInfo.telephoneNumber || "—" },
+                  { icon: Mail,     label: "Email",                   value: sub.participantInfo.email },
+                  { icon: Calendar, label: "Submitted",               value: formatDate(sub.submittedAt) },
                 ].map(({ icon: Icon, label, value }) => (
                   <div key={label} className="flex gap-3">
                     <Icon className="w-4 h-4 text-slate-600 flex-shrink-0 mt-0.5" />
@@ -306,13 +309,13 @@ export default function SubmissionReviewPage({ params }: { params: Promise<{ id:
                 </h2>
                 <p className="text-sm text-[var(--text-muted)] mb-5">Based on areas scoring Moderate, Developing, or Needs Training.</p>
                 <div className="space-y-4">
-                  {sub.results.filter(r => !["Expert", "Proficient"].includes(r.level) && r.answeredCount > 0).map(r => (
+                  {sub.results.filter(r => r.level === "Basic" && r.answeredCount > 0).map(r => (
                     <div key={r.category} className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-4">
-                      <p className="text-sm font-semibold mb-2" style={{ color: LEVEL_COLOR[r.level] }}>
+                      <p className="text-sm font-semibold mb-2" style={{ color: LEVEL_COLOR[r.level] ?? "#f97316" }}>
                         {r.category} — {r.level}
                       </p>
                       <ul className="space-y-1.5">
-                        {TRAINING_MAP[r.category as Category].map(prog => (
+                        {TRAINING_MAP[r.category as Category].basic.map(prog => (
                           <li key={prog} className="flex items-center gap-2 text-sm text-[var(--text-base)]">
                             <div className="w-1.5 h-1.5 rounded-full bg-[#60a5fa] flex-shrink-0" />{prog}
                           </li>
@@ -320,8 +323,8 @@ export default function SubmissionReviewPage({ params }: { params: Promise<{ id:
                       </ul>
                     </div>
                   ))}
-                  {sub.results.every(r => ["Expert", "Proficient"].includes(r.level) || r.answeredCount === 0) && (
-                    <p className="text-sm text-green-400 text-center py-4">Excellent performance. Advanced programs recommended.</p>
+                  {sub.results.every(r => r.level === "Advanced" || r.answeredCount === 0) && (
+                    <p className="text-sm text-[#3b82f6] text-center py-4">Advanced across all areas. Specialization programs recommended.</p>
                   )}
                 </div>
               </div>

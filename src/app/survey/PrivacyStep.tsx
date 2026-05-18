@@ -20,7 +20,7 @@ export default function PrivacyStep({ onAccept }: Props) {
         <div>
           <p className="font-semibold text-[var(--text-base)] mb-2">Information we collect:</p>
           <ul className="space-y-1 list-none">
-            {["Client / Company Name", "Address", "Trainee Name & Job Title", "Mobile & Telephone Number", "Email Address", "Assessment responses and self-ratings"].map(i => (
+            {["Client / Company Name", "Address", "Trainee Name & Job Title", "Mobile & Telephone Number", "Email Address", "Rank / Position Level", "Age Bracket", "Position Classification (Technical / Non-Technical)", "Assessment responses and self-ratings (64 questions)"].map(i => (
               <li key={i} className="flex items-start gap-2"><span className="w-1.5 h-1.5 rounded-full bg-[#60a5fa] mt-1.5 flex-shrink-0" />{i}</li>
             ))}
           </ul>

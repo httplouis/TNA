@@ -56,7 +56,10 @@ export default function PrivacyPage() {
                 "Mobile Number",
                 "Telephone Number",
                 "Email Address",
-                "Assessment responses and self-ratings",
+                "Rank / Position Level",
+                "Age Bracket",
+                "Position Classification (Technical / Non-Technical)",
+                "Assessment responses and self-ratings (64 questions)",
                 "Open-ended descriptions of tasks and training goals",
               ].map((item) => (
                 <li key={item} className="flex items-start gap-2.5">

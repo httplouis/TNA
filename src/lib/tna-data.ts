@@ -2,6 +2,7 @@
 // Rating scale: 1 = Very experienced  →  5 = No experience at all
 
 export type SkillLevel = 1 | 2 | 3 | 4 | 5;
+export type TnaLevel = "Basic" | "Advanced";
 
 export type Category =
   | "Worksheet & Workbook Management"
@@ -31,13 +32,16 @@ export interface Response {
 }
 
 export interface ParticipantInfo {
-  clientName:      string; // name or company name
-  address:         string; // free-form address
-  traineeName:     string;
-  jobTitle:        string;
-  mobileNumber:    string;
-  telephoneNumber: string;
-  email:           string;
+  clientName:              string; // name or company name
+  address:                 string; // free-form address
+  traineeName:             string;
+  jobTitle:                string;
+  mobileNumber:            string;
+  telephoneNumber:         string;
+  email:                   string;
+  rank:                    string; // e.g. Senior Analyst, Manager
+  ageBracket:              string; // e.g. 25–34
+  positionClassification:  string; // Technical, Non-Technical, or custom
 }
 
 export interface OpenAnswers {
@@ -58,11 +62,11 @@ export interface Submission {
 }
 
 export interface CategoryResult {
-  category:      Category;
-  avgScore:      number;        // 1–5, lower = more experienced
-  answeredCount: number;
-  level:         "Expert" | "Proficient" | "Moderate" | "Developing" | "Needs Training";
-  color:         string;
+  category:       Category;
+  avgScore:       number;   // 1–5, lower = more experienced
+  answeredCount:  number;
+  level:          TnaLevel; // "Advanced" | "Basic"
+  color:          string;
   recommendation: string;
 }
 
@@ -222,12 +226,26 @@ export const QUESTIONS: Question[] = [
 
 // ── Score computation (inverted: lower avg = more experienced) ────────────────
 
-function getScoreLevel(avg: number): { level: CategoryResult["level"]; color: string; recommendation: string } {
-  if (avg <= 1.9) return { level: "Expert",         color: "#3b82f6", recommendation: "Excellent proficiency. Consider advanced or leadership/train-the-trainer programs." };
-  if (avg <= 2.9) return { level: "Proficient",     color: "#22c55e", recommendation: "Good competency. Advanced workshops or peer mentoring programs are recommended." };
-  if (avg <= 3.4) return { level: "Moderate",       color: "#eab308", recommendation: "Moderate skill level. Refresher training and guided practice will help solidify skills." };
-  if (avg <= 4.4) return { level: "Developing",     color: "#f97316", recommendation: "Developing skill. Structured coaching and skill-building workshops are recommended." };
-  return            { level: "Needs Training",   color: "#ef4444", recommendation: "No or limited experience. Intensive foundational training is strongly recommended." };
+// avg ≤ 2.5 = Advanced (more experienced), avg > 2.5 = Basic (needs training)
+function getScoreLevel(avg: number): { level: TnaLevel; color: string; recommendation: string } {
+  if (avg === 0) return { level: "Basic", color: "#f97316", recommendation: "No responses recorded. Foundational training is recommended." };
+  if (avg <= 2.5) return {
+    level: "Advanced",
+    color: "#3b82f6",
+    recommendation: "Good to strong proficiency. Advanced workshops or specialization programs are recommended.",
+  };
+  return {
+    level: "Basic",
+    color: "#f97316",
+    recommendation: "Limited to moderate experience. Foundational training is strongly recommended.",
+  };
+}
+
+/** Compute the respondent's overall Basic/Advanced level from all responses */
+export function computeOverallLevel(responses: Response[]): TnaLevel {
+  if (responses.length === 0) return "Basic";
+  const avg = responses.reduce((sum, r) => sum + r.rating, 0) / responses.length;
+  return avg <= 2.5 ? "Advanced" : "Basic";
 }
 
 export function computeResults(responses: Response[]): CategoryResult[] {
@@ -272,6 +290,9 @@ function generateDummySubmission(index: number): Submission {
       traineeName: DUMMY_NAMES[index % 5], jobTitle: DUMMY_TITLES[index % 5],
       mobileNumber: "09123456789", telephoneNumber: "123-4567",
       email: `${DUMMY_NAMES[index % 5].split(" ")[0].toLowerCase()}@example.com`,
+      rank: ["Staff", "Senior Staff", "Supervisor", "Manager", "Director"][index % 5],
+      ageBracket: ["25–34", "35–44", "45–54", "Below 25", "55 and above"][index % 5],
+      positionClassification: index % 2 === 0 ? "Technical" : "Non-Technical",
     },
     consentGiven: true,
     responses, results: computeResults(responses),
@@ -287,12 +308,28 @@ export function getSubmissions(): Submission[] {
   try {
     const raw = localStorage.getItem(STORE_KEY);
     let parsed: Submission[] = raw ? JSON.parse(raw) : [];
+
+    // Migrate stale records: recompute results if any category level is not Basic/Advanced
+    let needsSave = false;
+    parsed = parsed.map(sub => {
+      const hasStaleResults = sub.results?.some(
+        r => r.level !== "Basic" && r.level !== "Advanced"
+      );
+      if (hasStaleResults && sub.responses?.length > 0) {
+        needsSave = true;
+        return { ...sub, results: computeResults(sub.responses) };
+      }
+      return sub;
+    });
+
     if (parsed.length < 5) {
       const needed = 5 - parsed.length;
       const dummies = Array.from({ length: needed }).map((_, i) => generateDummySubmission(parsed.length + i));
       parsed = [...parsed, ...dummies];
-      localStorage.setItem(STORE_KEY, JSON.stringify(parsed));
+      needsSave = true;
     }
+
+    if (needsSave) localStorage.setItem(STORE_KEY, JSON.stringify(parsed));
     return parsed;
   } catch { return []; }
 }
@@ -322,11 +359,12 @@ export function exportToCSV(submissions: Submission[]): void {
       ? `"${s.replace(/"/g, '""')}"` : s;
   };
 
-  const categoryHeaders = ALL_CATEGORIES.map((c) => escape(c + " (avg)")).join(",");
   const header = [
     "Submission ID", "Submitted At", "Status",
     "Client Name", "Address", "Trainee Name", "Job Title",
     "Mobile Number", "Telephone Number", "Email",
+    "Rank", "Age Bracket", "Position Classification",
+    "Overall Level",
     ...ALL_CATEGORIES.map((c) => c + " (avg)"),
     ...ALL_CATEGORIES.map((c) => c + " (level)"),
     "Tasks Performed", "Training Goals", "Admin Notes",
@@ -336,6 +374,7 @@ export function exportToCSV(submissions: Submission[]): void {
     const results = sub.results ?? computeResults(sub.responses);
     const avgs    = ALL_CATEGORIES.map((cat) => results.find((r) => r.category === cat)?.avgScore ?? "");
     const levels  = ALL_CATEGORIES.map((cat) => results.find((r) => r.category === cat)?.level ?? "");
+    const overall = computeOverallLevel(sub.responses);
     return [
       sub.id,
       new Date(sub.submittedAt).toLocaleString("en-PH"),
@@ -347,6 +386,10 @@ export function exportToCSV(submissions: Submission[]): void {
       sub.participantInfo.mobileNumber,
       sub.participantInfo.telephoneNumber,
       sub.participantInfo.email,
+      sub.participantInfo.rank ?? "",
+      sub.participantInfo.ageBracket ?? "",
+      sub.participantInfo.positionClassification ?? "",
+      overall,
       ...avgs,
       ...levels,
       sub.openAnswers.tasksPerformed,
@@ -367,19 +410,55 @@ export function exportToCSV(submissions: Submission[]): void {
 
 // ── Training recommendation map ───────────────────────────────────────────────
 
-export const TRAINING_MAP: Record<Category, string[]> = {
-  "Worksheet & Workbook Management":  ["Excel Essentials: Worksheet Management", "Spreadsheet Productivity Workshop"],
-  "Working with Graphic Objects":     ["Excel Graphics & Visual Tools Training"],
-  "Working with Charts":              ["Data Visualization with Excel Charts"],
-  "Working with Excel Databases":     ["Excel Database Management Workshop", "List & Subtotal Techniques"],
-  "Working with Advanced Functions":  ["Advanced Excel Formulas & Functions", "Excel Power User Bootcamp"],
-  "Linking Data":                     ["Excel Data Linking & Integration"],
-  "Proofing and Security":            ["Excel Data Validation & Security Workshop"],
-  "Organizing Table Data":            ["Excel Sorting, Filtering & Table Management"],
-  "Analyzing Data":                   ["Excel Data Analysis Tools", "PivotTable & PivotChart Mastery"],
-  "Working with Multiple Workbooks":  ["Multi-Workbook Management in Excel"],
-  "Importing and Exporting Data":     ["Excel Data Import & Export Techniques"],
-  "Basic Macros":                     ["Introduction to Excel Macros & Automation"],
+export const TRAINING_MAP: Record<Category, { basic: string[]; advanced: string[] }> = {
+  "Worksheet & Workbook Management":  {
+    basic:    ["Excel Essentials: Worksheet Management", "Spreadsheet Productivity Workshop"],
+    advanced: ["Advanced Spreadsheet Techniques", "Excel Power User Bootcamp"],
+  },
+  "Working with Graphic Objects":     {
+    basic:    ["Excel Graphics & Visual Tools — Foundation"],
+    advanced: ["Excel Graphics & Visual Tools — Advanced"],
+  },
+  "Working with Charts":              {
+    basic:    ["Data Visualization with Excel Charts — Foundation"],
+    advanced: ["Advanced Charting & Dashboard Design in Excel"],
+  },
+  "Working with Excel Databases":     {
+    basic:    ["Excel Database Management Workshop", "List & Subtotal Techniques"],
+    advanced: ["Advanced Excel Database Techniques"],
+  },
+  "Working with Advanced Functions":  {
+    basic:    ["Excel Functions Essentials"],
+    advanced: ["Advanced Excel Formulas & Functions", "Excel Power User Bootcamp"],
+  },
+  "Linking Data":                     {
+    basic:    ["Excel Data Linking — Foundation"],
+    advanced: ["Excel Data Linking & Integration — Advanced"],
+  },
+  "Proofing and Security":            {
+    basic:    ["Excel Data Validation & Security — Foundation"],
+    advanced: ["Excel Data Validation & Security — Advanced"],
+  },
+  "Organizing Table Data":            {
+    basic:    ["Excel Sorting, Filtering & Table Management — Foundation"],
+    advanced: ["Advanced Table Organization & Power Query"],
+  },
+  "Analyzing Data":                   {
+    basic:    ["Excel Data Analysis Tools — Foundation"],
+    advanced: ["PivotTable & PivotChart Mastery", "Advanced Data Analysis with Excel"],
+  },
+  "Working with Multiple Workbooks":  {
+    basic:    ["Multi-Workbook Management in Excel — Foundation"],
+    advanced: ["Advanced Multi-Workbook Techniques"],
+  },
+  "Importing and Exporting Data":     {
+    basic:    ["Excel Data Import & Export — Foundation"],
+    advanced: ["Excel Data Import & Export — Advanced Techniques"],
+  },
+  "Basic Macros":                     {
+    basic:    ["Introduction to Excel Macros & Automation"],
+    advanced: ["Advanced Excel Macros & VBA"],
+  },
 };
 
 // ── Level rating descriptions (inverted scale) ────────────────────────────────
@@ -391,3 +470,193 @@ export const LEVEL_DESCRIPTIONS: Record<number, string> = {
   4: "Inexperienced, often need to ask for help from others.",
   5: "No experience at all.",
 };
+
+// ── Analytics helpers ─────────────────────────────────────────────────────────
+
+export type RatingLevel = 1 | 2 | 3 | 4 | 5;
+
+/** Meta for the 2-level Basic/Advanced classification */
+export const TNA_LEVEL_META: Record<TnaLevel, { label: string; color: string; description: string }> = {
+  Advanced: {
+    label: "Advanced",
+    color: "#3b82f6",
+    description: "Average score ≤ 2.5 — strong proficiency across assessed skills.",
+  },
+  Basic: {
+    label: "Basic",
+    color: "#f97316",
+    description: "Average score > 2.5 — needs foundational or refresher training.",
+  },
+};
+
+/** Count of submissions at each overall level (Basic / Advanced) */
+export function getRatingDistribution(submissions: Submission[]): Record<TnaLevel, number> {
+  const counts: Record<TnaLevel, number> = { Advanced: 0, Basic: 0 };
+  submissions.forEach(s => {
+    const level = computeOverallLevel(s.responses);
+    counts[level]++;
+  });
+  return counts;
+}
+
+/** For a given overall level, returns trainees with their per-category breakdown */
+export function getTraineesAtRatingLevel(
+  submissions: Submission[],
+  level: TnaLevel
+): {
+  trainee: string; client: string; id: string;
+  overallAvg: number;
+  categoryBreakdown: { category: string; level: TnaLevel; avgScore: number; recommendations: string[] }[];
+}[] {
+  return submissions
+    .filter(s => computeOverallLevel(s.responses) === level)
+    .map(sub => {
+      const results = sub.results ?? computeResults(sub.responses);
+      const overallAvg = sub.responses.length > 0
+        ? Math.round((sub.responses.reduce((sum, r) => sum + r.rating, 0) / sub.responses.length) * 10) / 10
+        : 0;
+      const categoryBreakdown = results
+        .filter(r => r.answeredCount > 0)
+        .map(r => ({
+          category: r.category,
+          level: r.level,
+          avgScore: r.avgScore,
+          recommendations: TRAINING_MAP[r.category]?.[r.level === "Basic" ? "basic" : "advanced"] ?? [],
+        }));
+      return {
+        trainee: sub.participantInfo.traineeName,
+        client: sub.participantInfo.clientName,
+        id: sub.id,
+        overallAvg,
+        categoryBreakdown,
+      };
+    });
+}
+
+/** Per category: how many submissions landed at Basic vs Advanced (based on avgScore) */
+export function getCategoryLevelBreakdown(
+  submissions: Submission[]
+): Record<Category, Record<TnaLevel, number>> {
+  const result = {} as Record<Category, Record<TnaLevel, number>>;
+  ALL_CATEGORIES.forEach(cat => {
+    result[cat] = { Advanced: 0, Basic: 0 };
+  });
+  submissions.forEach(sub => {
+    const results = sub.results ?? computeResults(sub.responses);
+    results.forEach(r => {
+      if (r.answeredCount > 0 && result[r.category]) {
+        result[r.category][r.level]++;
+      }
+    });
+  });
+  return result;
+}
+
+/** For a given category + TnaLevel, returns the trainee names */
+export function getTraineesAtCategoryLevel(
+  submissions: Submission[],
+  category: Category,
+  level: TnaLevel
+): { trainee: string; client: string; id: string; avgScore: number }[] {
+  return submissions.flatMap(sub => {
+    const results = sub.results ?? computeResults(sub.responses);
+    const catResult = results.find(r => r.category === category);
+    if (!catResult || catResult.level !== level || catResult.answeredCount === 0) return [];
+    return [{ trainee: sub.participantInfo.traineeName, client: sub.participantInfo.clientName, id: sub.id, avgScore: catResult.avgScore }];
+  });
+}
+
+/** Get list of unique client/company segments */
+export function getSegments(submissions: Submission[]): string[] {
+  const segments = new Set<string>();
+  submissions.forEach(s => segments.add(s.participantInfo.clientName));
+  return ["All Segments", ...Array.from(segments).sort()];
+}
+
+/** Get unique position classifications */
+export function getPositionClassifications(submissions: Submission[]): string[] {
+  const set = new Set<string>();
+  submissions.forEach(s => {
+    if (s.participantInfo.positionClassification) set.add(s.participantInfo.positionClassification);
+  });
+  return ["All", ...Array.from(set).sort()];
+}
+
+/** Parse internally-exported CSV back into Submission[] (best-effort) */
+export function parseCSVToSubmissions(csvText: string): Submission[] {
+  const lines = csvText.trim().split("\n");
+  if (lines.length < 2) return [];
+
+  const parseCSVRow = (line: string): string[] => {
+    const result: string[] = [];
+    let cur = "";
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') {
+        if (inQuotes && line[i + 1] === '"') { cur += '"'; i++; }
+        else inQuotes = !inQuotes;
+      } else if (ch === "," && !inQuotes) {
+        result.push(cur); cur = "";
+      } else {
+        cur += ch;
+      }
+    }
+    result.push(cur);
+    return result;
+  };
+
+  const headers = parseCSVRow(lines[0]);
+  const idxOf = (name: string) => headers.findIndex(h => h.trim() === name);
+
+  const subs: Submission[] = [];
+  for (let i = 1; i < lines.length; i++) {
+    try {
+      const cols = parseCSVRow(lines[i]);
+      const get = (name: string) => cols[idxOf(name)]?.trim() ?? "";
+
+      const responses: Response[] = [];
+      const results: CategoryResult[] = ALL_CATEGORIES.map(cat => {
+        const avg = parseFloat(get(cat + " (avg)")) || 0;
+        const rawLevel = get(cat + " (level)");
+        // Normalise: accept old 5-level labels or new Basic/Advanced
+        const level: TnaLevel =
+          rawLevel === "Advanced" ? "Advanced" :
+          rawLevel === "Basic"    ? "Basic" :
+          avg <= 2.5              ? "Advanced" : "Basic";
+        const color = level === "Advanced" ? "#3b82f6" : "#f97316";
+        const recommendation = level === "Advanced"
+          ? "Good to strong proficiency. Advanced workshops recommended."
+          : "Limited experience. Foundational training is recommended.";
+        return { category: cat, avgScore: avg, answeredCount: avg > 0 ? 1 : 0, level, color, recommendation };
+      });
+
+      const sub: Submission = {
+        id: get("Submission ID") || `csv_${i}`,
+        participantInfo: {
+          clientName: get("Client Name"),
+          address: get("Address"),
+          traineeName: get("Trainee Name"),
+          jobTitle: get("Job Title"),
+          mobileNumber: get("Mobile Number"),
+          telephoneNumber: get("Telephone Number"),
+          email: get("Email"),
+          rank: get("Rank"),
+          ageBracket: get("Age Bracket"),
+          positionClassification: get("Position Classification"),
+        },
+        responses,
+        results,
+        openAnswers: { tasksPerformed: get("Tasks Performed"), trainingGoals: get("Training Goals") },
+        consentGiven: true,
+        submittedAt: new Date(get("Submitted At")).toISOString() || new Date().toISOString(),
+        status: (get("Status") as Submission["status"]) || "pending",
+        adminNotes: get("Admin Notes") || undefined,
+      };
+      subs.push(sub);
+    } catch {
+      // skip malformed rows
+    }
+  }
+  return subs;
+}
