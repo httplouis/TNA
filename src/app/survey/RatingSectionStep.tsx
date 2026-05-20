@@ -86,31 +86,33 @@ export default function RatingSectionStep({
                       </p>
 
                       {/* Rating buttons 1-5 */}
-                      <div className="flex flex-wrap gap-2">
-                        {([1, 2, 3, 4, 5] as SkillLevel[]).map((val) => {
-                          const selected = rating === val;
-                          const colors: Record<number, string> = {
-                            1: "#3b82f6", 2: "#22c55e", 3: "#eab308", 4: "#f97316", 5: "#ef4444",
-                          };
-                          const c = colors[val];
-                          return (
-                            <button
-                              key={val}
-                              id={`rate-${q.id}-${val}`}
-                              onClick={() => onRate(q.id, val, wantsToLearn)}
-                              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold border transition-all hover:-translate-y-0.5"
-                              style={selected
-                                ? { backgroundColor: c + "25", borderColor: c + "80", color: c }
-                                : { backgroundColor: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.08)", color: "#64748b" }}
-                            >
-                              <span className="font-bold">{val}</span>
-                            </button>
-                          );
-                        })}
+                      <div className="flex flex-col gap-2">
+                        <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
+                          {([1, 2, 3, 4, 5] as SkillLevel[]).map((val) => {
+                            const selected = rating === val;
+                            const colors: Record<number, string> = {
+                              1: "#3b82f6", 2: "#22c55e", 3: "#eab308", 4: "#f97316", 5: "#ef4444",
+                            };
+                            const c = colors[val];
+                            return (
+                              <button
+                                key={val}
+                                id={`rate-${q.id}-${val}`}
+                                onClick={() => onRate(q.id, val, wantsToLearn)}
+                                className="flex items-center justify-center py-2.5 sm:py-2 rounded-lg text-sm font-bold border transition-all hover:-translate-y-0.5 active:scale-95"
+                                style={selected
+                                  ? { backgroundColor: c + "25", borderColor: c + "80", color: c }
+                                  : { backgroundColor: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.08)", color: "#64748b" }}
+                              >
+                                {val}
+                              </button>
+                            );
+                          })}
+                        </div>
                         {rating && (
-                          <span className="ml-2 self-center text-xs text-[var(--text-muted)]">
+                          <p className="text-xs text-[var(--text-muted)] mt-1">
                             {LEVEL_ROWS[rating - 1].desc}
-                          </span>
+                          </p>
                         )}
                       </div>
 

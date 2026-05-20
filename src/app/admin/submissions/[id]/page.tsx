@@ -147,7 +147,7 @@ export default function SubmissionReviewPage({ params }: { params: Promise<{ id:
           <Link href="/admin/dashboard" className="flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text-base)] transition-colors">
             <ChevronLeft className="w-4 h-4" /> Dashboard
           </Link>
-          <Image src="/informatics-logo.png" alt="Informatics" width={90} height={24} className="h-6 w-auto object-contain brightness-0 invert opacity-60 hidden sm:block" />
+          <Image src="/informatics-logo-white.png" alt="Informatics" width={90} height={24} className="h-6 w-auto object-contain opacity-60 hidden sm:block" />
           <div className="flex items-center gap-3">
             <button onClick={handleExportSingle} className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] hover:text-[var(--text-base)] transition-colors">
               <Download className="w-3.5 h-3.5" />Export CSV
@@ -162,10 +162,10 @@ export default function SubmissionReviewPage({ params }: { params: Promise<{ id:
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-6 py-8 space-y-6">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-5 sm:space-y-6">
         {/* Status Stepper */}
-        <div className="glass-card p-5">
-          <div className="flex items-center justify-between">
+        <div className="glass-card p-4 sm:p-5">
+          <div className="flex items-center justify-between overflow-x-auto gap-2">
             {STATUS_FLOW.map((s, i) => {
               const done = i <= currentStatusIdx; const active = i === currentStatusIdx;
               const scfg = STATUS_CONFIG[s]; const Icon = scfg.icon;
@@ -187,7 +187,7 @@ export default function SubmissionReviewPage({ params }: { params: Promise<{ id:
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Left column */}
           <div className="lg:col-span-1 space-y-5">
             {/* Participant Info */}

@@ -48,44 +48,44 @@ export default function LevelDetailPage({ params }: { params: Promise<{ level: s
       {/* Header */}
       <header className="sticky top-0 z-40 backdrop-blur border-b border-[var(--border)]"
         style={{ backgroundColor: "var(--bg-nav)" }}>
-        <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
           <Link href="/admin/dashboard"
-            className="flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text-base)] transition-colors">
+            className="flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text-base)] transition-colors flex-shrink-0">
             <ChevronLeft className="w-4 h-4" /> Dashboard
           </Link>
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: meta.color }} />
-            <span className="text-sm font-semibold" style={{ color: meta.color }}>{tnaLevel} Level</span>
-            <span className="text-[var(--text-muted)] text-sm">— {filtered.length} respondent{filtered.length !== 1 ? "s" : ""}</span>
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: meta.color }} />
+            <span className="text-sm font-semibold truncate" style={{ color: meta.color }}>{tnaLevel} Level</span>
+            <span className="text-[var(--text-muted)] text-xs sm:text-sm hidden sm:inline">— {filtered.length} respondent{filtered.length !== 1 ? "s" : ""}</span>
           </div>
-          <div className="w-28" />
+          <div className="w-8 sm:w-28" />
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-6 py-8 space-y-6">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-5 sm:space-y-6">
         {/* Hero Card */}
-        <div className="glass-card p-6 flex flex-col sm:flex-row items-start sm:items-center gap-6"
+        <div className="glass-card p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6"
           style={{ borderColor: meta.color + "40" }}>
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
             style={{ backgroundColor: meta.color + "20" }}>
-            <TrendingUp className="w-7 h-7" style={{ color: meta.color }} />
+            <TrendingUp className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: meta.color }} />
           </div>
-          <div className="flex-1">
-            <h1 className="text-xl font-bold mb-1" style={{ color: meta.color }}>{tnaLevel} Level Respondents</h1>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-lg sm:text-xl font-bold mb-1" style={{ color: meta.color }}>{tnaLevel} Level Respondents</h1>
             <p className="text-sm text-[var(--text-muted)]">{meta.description}</p>
           </div>
-          <div className="flex gap-6 flex-shrink-0">
+          <div className="flex gap-4 sm:gap-6 flex-shrink-0">
             <div className="text-center">
-              <p className="text-3xl font-bold" style={{ color: meta.color }}>{filtered.length}</p>
+              <p className="text-2xl sm:text-3xl font-bold" style={{ color: meta.color }}>{filtered.length}</p>
               <p className="text-xs text-[var(--text-muted)] mt-0.5">Respondents</p>
             </div>
             <div className="text-center">
-              <p className="text-3xl font-bold text-[#f97316]">{totalBasicCats}</p>
-              <p className="text-xs text-[var(--text-muted)] mt-0.5">Basic Categories</p>
+              <p className="text-2xl sm:text-3xl font-bold text-[#f97316]">{totalBasicCats}</p>
+              <p className="text-xs text-[var(--text-muted)] mt-0.5">Basic Cats</p>
             </div>
             <div className="text-center">
-              <p className="text-3xl font-bold text-[#3b82f6]">{totalAdvCats}</p>
-              <p className="text-xs text-[var(--text-muted)] mt-0.5">Advanced Categories</p>
+              <p className="text-2xl sm:text-3xl font-bold text-[#3b82f6]">{totalAdvCats}</p>
+              <p className="text-xs text-[var(--text-muted)] mt-0.5">Advanced Cats</p>
             </div>
           </div>
         </div>
@@ -118,20 +118,20 @@ export default function LevelDetailPage({ params }: { params: Promise<{ level: s
               return (
                 <div key={t.id} className="glass-card p-6 space-y-5">
                   {/* Trainee Header */}
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
                         style={{ backgroundColor: meta.color + "20", color: meta.color }}>
                         {idx + 1}
                       </div>
                       <div>
                         <p className="text-base font-bold text-[var(--text-base)]">{t.trainee}</p>
-                        <p className="text-xs text-[var(--text-muted)]">{t.client} · Overall avg: <span className="font-semibold" style={{ color: meta.color }}>{t.overallAvg}/5</span></p>
+                        <p className="text-xs text-[var(--text-muted)]">{t.client} · avg: <span className="font-semibold" style={{ color: meta.color }}>{t.overallAvg}/5</span></p>
                       </div>
                     </div>
                     <Link href={`/admin/submissions/${t.id}`}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-[#1d6eb5]/20 hover:bg-[#1d6eb5]/40 text-[#60a5fa] transition-all flex-shrink-0">
-                      View Full Submission <ExternalLink className="w-3 h-3" />
+                      className="self-start sm:self-center flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-[#1d6eb5]/20 hover:bg-[#1d6eb5]/40 text-[#60a5fa] transition-all flex-shrink-0">
+                      View <ExternalLink className="w-3 h-3" />
                     </Link>
                   </div>
 

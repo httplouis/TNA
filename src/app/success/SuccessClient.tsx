@@ -130,14 +130,14 @@ export default function SuccessClient() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[var(--bg-page)] flex flex-col items-center justify-start px-6 py-12 text-center">
+    <div className="min-h-screen bg-[var(--bg-page)] flex flex-col items-center justify-start px-5 sm:px-6 py-10 sm:py-12 text-center">
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#1d6eb5]/10 rounded-full blur-[120px]" />
       </div>
 
       <div className="relative max-w-xl w-full animate-scale-in">
-        <div className="mb-8">
-          <Image src="/informatics-logo.png" alt="Informatics Holdings Philippines" width={130} height={36} className="h-9 w-auto object-contain mx-auto" />
+        <div className="mb-6 sm:mb-8">
+          <Image src="/informatics-logo-white.png" alt="Informatics Holdings Philippines" width={130} height={36} className="h-8 sm:h-9 w-auto object-contain mx-auto" />
         </div>
 
         <div className="relative inline-flex items-center justify-center mb-6">

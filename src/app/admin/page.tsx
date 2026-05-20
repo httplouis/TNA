@@ -43,7 +43,7 @@ export default function AdminLoginPage() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
             <Image
-              src="/informatics-logo.png"
+              src="/informatics-logo-white.png"
               alt="Informatics Holdings Philippines"
               width={110}
               height={30}

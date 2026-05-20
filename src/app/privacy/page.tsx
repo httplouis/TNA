@@ -12,17 +12,17 @@ export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-[var(--bg-page)] text-[var(--text-base)]">
       <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--bg-page)]/80 backdrop-blur-md">
-        <div className="max-w-3xl mx-auto px-6 h-14 flex items-center justify-between">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-[var(--text-base)] transition-colors">
             <ArrowLeft className="w-4 h-4" />
             Back
           </Link>
-          <Image src="/informatics-logo.png" alt="Informatics Holdings Philippines" width={100} height={26} className="h-6 w-auto object-contain" />
-          <div className="w-20" />
+          <Image src="/informatics-logo-white.png" alt="Informatics Holdings Philippines" width={100} height={26} className="h-5 sm:h-6 w-auto object-contain" />
+          <div className="w-12 sm:w-20" />
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-6 py-12">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <div className="mb-10">
           <div className="w-12 h-12 rounded-xl bg-[#1d6eb5]/20 flex items-center justify-center mb-5">
             <ShieldCheck className="w-6 h-6 text-[#60a5fa]" />

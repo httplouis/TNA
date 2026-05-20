@@ -112,7 +112,7 @@ export default function InfoStep({ info, onChange, errors, onBack, onNext }: Pro
         <Field id="input-jobtitle"  label="Job Title"         icon={Briefcase} placeholder="e.g. Analyst, Coordinator" value={info.jobTitle}         onChange={set("jobTitle")}         error={errors.jobTitle}        required />
         <Field id="input-rank"      label="Rank"              icon={Tag}       placeholder="e.g. Senior Analyst, Division Manager" value={info.rank ?? ""}  onChange={set("rank")}   error={errors.rank}            required />
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <SelectField
             id="input-age-bracket"
             label="Age Bracket"
@@ -151,7 +151,7 @@ export default function InfoStep({ info, onChange, errors, onBack, onNext }: Pro
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field id="input-mobile"  label="Mobile Number"     icon={Phone}     placeholder="e.g. 09XX-XXX-XXXX"       value={info.mobileNumber}    onChange={set("mobileNumber")}     error={errors.mobileNumber} />
           <Field id="input-tel"     label="Telephone Number"  icon={Phone}     placeholder="e.g. (02) 8XXX-XXXX"      value={info.telephoneNumber} onChange={set("telephoneNumber")}  error={errors.telephoneNumber} />
         </div>

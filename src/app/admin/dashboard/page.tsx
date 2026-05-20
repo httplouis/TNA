@@ -7,8 +7,9 @@ import Image from "next/image";
 import {
   LayoutDashboard, ClipboardList, CheckCircle2, Clock, Send, LogOut,
   Eye, Users, Search, Filter, ChevronRight, FolderOpen, Settings,
-  Download, TrendingUp, BarChart3, AlertTriangle, Upload,
+  Download, TrendingUp, BarChart3, AlertTriangle, Upload, Menu, X,
 } from "lucide-react";
+
 import {
   getSubmissions, exportToCSV, ALL_CATEGORIES, computeOverallLevel,
   computeResults, getCategoryLevelBreakdown,
@@ -383,6 +384,7 @@ export default function AdminDashboardPage() {
   const [filterStatus, setFilter]     = useState<FilterStatus>("all");
   const [loading, setLoading]         = useState(true);
   const [view, setView]               = useState<AdminView>("dashboard");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const refresh = useCallback(() => { setSubmissions(getSubmissions()); }, []);
 
@@ -414,15 +416,25 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="min-h-screen transition-colors duration-300" style={{ backgroundColor: 'var(--bg-page)', color: 'var(--text-base)' }}>
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 z-30 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="fixed left-0 top-0 h-screen w-[200px] flex flex-col z-40 transition-colors duration-300" style={{ backgroundColor: 'var(--bg-surface)', borderRight: '1px solid var(--border)' }}>
+      <aside className={`fixed left-0 top-0 h-screen w-[200px] flex flex-col z-40 transition-all duration-300 ${
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+      }`} style={{ backgroundColor: 'var(--bg-surface)', borderRight: '1px solid var(--border)' }}>
         <div className="px-5 py-5" style={{ borderBottom: '1px solid var(--border)' }}>
-          <Image src="/informatics-logo.png" alt="Informatics" width={120} height={32} className="h-7 w-auto object-contain dark:brightness-100 brightness-0" />
+          <Image src="/informatics-logo-white.png" alt="Informatics" width={120} height={32} className="h-7 w-auto object-contain" />
           <span className="text-[9px] block mt-1 tracking-widest uppercase" style={{ color: 'var(--text-muted)' }}>Admin Panel</span>
         </div>
-        <nav className="flex-1 px-3 py-4 space-y-1">
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {navItems.map(({ id, label, icon: Icon }) => (
-            <button key={id} onClick={() => setView(id)}
+            <button key={id} onClick={() => { setView(id); setSidebarOpen(false); }}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-left ${view === id ? "bg-[#1d6eb5]/20 text-[#60a5fa] border border-[#1d6eb5]/30" : "hover:bg-[var(--bg-hover)]"}`}
               style={view !== id ? { color: 'var(--text-muted)' } : {}}>
               <Icon className="w-4 h-4" />{label}
@@ -439,27 +451,34 @@ export default function AdminDashboardPage() {
       </aside>
 
       {/* Main */}
-      <main className="ml-[200px] min-h-screen">
-        <header className="sticky top-0 z-30 backdrop-blur px-8 h-14 flex items-center justify-between transition-colors duration-300" style={{ backgroundColor: 'var(--bg-nav)', borderBottom: '1px solid var(--border)' }}>
+      <main className="lg:ml-[200px] min-h-screen">
+        <header className="sticky top-0 z-30 backdrop-blur px-4 sm:px-8 h-14 flex items-center justify-between transition-colors duration-300" style={{ backgroundColor: 'var(--bg-nav)', borderBottom: '1px solid var(--border)' }}>
           <div className="flex items-center gap-3">
+            <button
+              className="lg:hidden p-1.5 rounded-lg hover:bg-[var(--bg-hover)] transition-colors"
+              onClick={() => setSidebarOpen(s => !s)}
+              aria-label="Toggle menu"
+            >
+              {sidebarOpen ? <X className="w-5 h-5" style={{ color: 'var(--text-muted)' }} /> : <Menu className="w-5 h-5" style={{ color: 'var(--text-muted)' }} />}
+            </button>
             {navItems.find(n => n.id === view) && (() => { const n = navItems.find(n => n.id === view)!; const Icon = n.icon; return <><Icon className="w-4 h-4 text-[var(--text-muted)]" /><h1 className="text-sm font-semibold text-[var(--text-base)]">{n.label}</h1></>; })()}
           </div>
-          <div className="flex items-center gap-3">
-            <button onClick={refresh} className="text-xs text-[var(--text-muted)] hover:text-slate-700 dark:hover:text-slate-300 transition-colors">Refresh</button>
-            <ExportButton />
+          <div className="flex items-center gap-2 sm:gap-3">
+            <button onClick={refresh} className="hidden sm:block text-xs text-[var(--text-muted)] hover:text-slate-700 dark:hover:text-slate-300 transition-colors">Refresh</button>
+            <span className="hidden sm:block"><ExportButton /></span>
             <ThemeToggle />
-            <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] ml-2 border-l border-[var(--border)] pl-4">
+            <div className="hidden sm:flex items-center gap-2 text-xs text-[var(--text-muted)] ml-2 border-l border-[var(--border)] pl-4">
               <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />Admin
             </div>
           </div>
         </header>
 
-        <div className="p-8">
+        <div className="p-4 sm:p-8">
           {/* Dashboard view */}
           {view === "dashboard" && (
             <>
               {/* KPI Cards */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 mb-6 sm:mb-8">
                 {[
                   { label: "Total Submissions", value: total,   icon: Users,        color: "#3b82f6" },
                   { label: "Pending Review",    value: pending,  icon: Clock,        color: "#f97316" },
@@ -479,7 +498,7 @@ export default function AdminDashboardPage() {
               </div>
 
               {/* Charts Row 1 — Status + Overall Classification */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
                 {/* Status Donut */}
                 <div className="glass-card p-6">
                   <h3 className="text-sm font-bold text-[var(--text-base)] mb-4 flex items-center gap-2">
@@ -544,7 +563,7 @@ export default function AdminDashboardPage() {
                 const healthLabel = healthPct >= 70 ? "Strong" : healthPct >= 40 ? "Moderate" : "Needs Work";
 
                 return (
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
                     {/* Priority Training Areas */}
                     <div className="glass-card p-5">
                       <h3 className="text-sm font-bold text-[var(--text-base)] mb-1 flex items-center gap-2">
@@ -650,7 +669,7 @@ export default function AdminDashboardPage() {
               })()}
 
               {/* Skill Level Breakdown — full width */}
-              <div className="glass-card p-6 mb-6">
+              <div className="glass-card p-4 sm:p-6 mb-4 sm:mb-6 overflow-x-auto">
                 <h3 className="text-sm font-bold text-[var(--text-base)] mb-1 flex items-center gap-2">
                   <BarChart3 className="w-4 h-4 text-[#60a5fa]" /> Skill Level by Category
                 </h3>

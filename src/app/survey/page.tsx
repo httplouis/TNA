@@ -179,12 +179,12 @@ export default function SurveyPage() {
 
       {/* Header */}
       <header className="sticky top-0 z-40 backdrop-blur-md transition-colors duration-300" style={{ backgroundColor: 'var(--bg-nav)', borderBottom: '1px solid var(--border)' }}>
-        <div className="max-w-3xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 text-sm transition-colors" style={{ color: 'var(--text-muted)' }}>
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-2">
+          <Link href="/" className="flex items-center gap-1.5 text-sm transition-colors flex-shrink-0" style={{ color: 'var(--text-muted)' }}>
             <ChevronLeft className="w-4 h-4" /> Back
           </Link>
-          <div className="flex items-center gap-4">
-            <Image src="/informatics-logo.png" alt="Informatics Holdings Philippines" width={100} height={26} className="h-6 w-auto object-contain dark:brightness-100 brightness-0" />
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Image src="/informatics-logo-white.png" alt="Informatics Holdings Philippines" width={100} height={26} className="h-5 sm:h-6 w-auto object-contain" />
             {process.env.NODE_ENV === "development" && (
               <button onClick={quickFill} className="hidden sm:block px-2 py-1 rounded text-[10px] font-bold bg-[#60a5fa]/20 text-[#60a5fa] hover:bg-[#60a5fa]/30 transition-colors uppercase tracking-wider">
                 Quick Fill
@@ -193,8 +193,8 @@ export default function SurveyPage() {
             <ThemeToggle />
           </div>
           {step !== "privacy" && step !== "submitting" ? (
-            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{Object.keys(responses).length}/{QUESTIONS.length} rated</span>
-          ) : <div className="w-20" />}
+            <span className="text-[10px] sm:text-xs flex-shrink-0" style={{ color: 'var(--text-muted)' }}>{Object.keys(responses).length}/{QUESTIONS.length}</span>
+          ) : <div className="w-8 sm:w-20" />}
         </div>
         {step !== "privacy" && step !== "submitting" && (
           <div className="h-0.5" style={{ backgroundColor: 'var(--border)' }}>
@@ -203,7 +203,7 @@ export default function SurveyPage() {
         )}
       </header>
 
-      <main className="max-w-3xl mx-auto px-6 py-10">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
 
         {/* Draft Banner */}
         {showDraftBanner && draft && step === "privacy" && (
