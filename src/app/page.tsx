@@ -10,6 +10,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import FeedbackWidget from "@/components/FeedbackWidget";
 
 export const metadata: Metadata = {
   title: "Training Needs Assessment Portal",
@@ -285,6 +286,7 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+      <FeedbackWidget />
     </div>
   );
 }

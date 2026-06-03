@@ -6,8 +6,14 @@ const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || "";
 const supabase = createClient(supabaseUrl, serviceKey);
 
+function missingKeyResponse() {
+  console.error("Supabase service key is not configured. Set SUPABASE_SERVICE_ROLE_KEY in env.");
+  return NextResponse.json({ error: "Supabase service key not configured." }, { status: 500 });
+}
+
 export async function GET() {
   try {
+    if (!serviceKey) return missingKeyResponse();
     const { data, error } = await supabase.from("feedback").select("*").order("created_at", { ascending: false });
     if (error) throw error;
     return NextResponse.json((data ?? []).map((row: any) => ({
@@ -25,6 +31,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    if (!serviceKey) return missingKeyResponse();
     const body = await req.json();
     const name = (body.name ?? "").toString().trim();
     const email = (body.email ?? "").toString().trim();
