@@ -52,7 +52,16 @@ export async function fetchSubmissionHistory(id: string): Promise<SubmissionHist
   try {
     const res = await fetch(`/api/submissions/${encodeURIComponent(id)}/history`);
     if (!res.ok) return [];
-    return await res.json();
+    const raw = await res.json();
+    return Array.isArray(raw)
+      ? raw.map((entry: any) => ({
+          id: entry.id,
+          submissionId: entry.submission_id ?? entry.submissionId,
+          eventType: entry.event_type ?? entry.eventType,
+          eventDetails: entry.event_details ?? entry.eventDetails,
+          createdAt: entry.created_at ?? entry.createdAt,
+        }))
+      : [];
   } catch {
     return [];
   }

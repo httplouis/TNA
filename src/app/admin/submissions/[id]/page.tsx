@@ -268,8 +268,8 @@ export default function SubmissionReviewPage({ params }: { params: Promise<{ id:
                   {history.map(entry => (
                     <div key={entry.id} className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
                       <div className="flex items-center justify-between gap-3 mb-2 text-xs text-[var(--text-muted)]">
-                        <span className="font-semibold text-[var(--text-base)]">{entry.eventType.replace(/_/g, ' ')}</span>
-                        <span>{formatDate(entry.createdAt)}</span>
+                        <span className="font-semibold text-[var(--text-base)]">{(entry.eventType ?? '').replace(/_/g, ' ')}</span>
+                        <span>{formatDate(entry.createdAt ?? (entry as any).created_at ?? new Date().toISOString())}</span>
                       </div>
                       <pre className="text-[11px] whitespace-pre-wrap break-words text-[var(--text-muted)]">{JSON.stringify(entry.eventDetails ?? {}, null, 2)}</pre>
                     </div>
