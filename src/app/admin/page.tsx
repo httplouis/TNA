@@ -80,7 +80,7 @@ export default function AdminLoginPage() {
                   id="admin-username"
                   type="text"
                   autoComplete="username"
-                  placeholder="admin"
+                  placeholder="Enter username"
                   value={form.username}
                   onChange={(e) => setForm({ ...form, username: e.target.value })}
                   className="w-full pl-10 pr-4 py-3 rounded-xl bg-[var(--bg-surface)] border border-[var(--border)] text-sm text-[var(--text-base)] placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-[#8B1A1A]/50 focus:border-[#8B1A1A]/40 transition-all"
@@ -139,11 +139,7 @@ export default function AdminLoginPage() {
             </button>
           </form>
 
-          <div className="mt-5 pt-5 border-t border-[var(--border)] text-center">
-            <p className="text-xs text-slate-600">
-              Demo credentials: <span className="text-[var(--text-muted)]">admin / xplore2025</span>
-            </p>
-          </div>
+
         </div>
 
         {/* Back link */}
