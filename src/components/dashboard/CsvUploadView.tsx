@@ -1,35 +1,63 @@
 "use client";
-import { useState, useRef } from "react";
-import { Upload, FileText, AlertTriangle, X, BarChart3, TrendingUp, Users, Clock, CheckCircle2, Send, Search, Filter } from "lucide-react";
-import { parseCSVToSubmissions, type Submission, ALL_CATEGORIES, computeResults, getCategoryLevelBreakdown } from "@/lib/tna-data";
+import { useState, useRef, useMemo } from "react";
+import { Upload, FileText, AlertTriangle, X, BarChart3, TrendingUp, Users, Clock, CheckCircle2, Send, Search, Filter, Building2 } from "lucide-react";
+import { parseCSVToSubmissions, type Submission, ALL_CATEGORIES, computeResults, getCategoryLevelBreakdown, computeOverallLevel } from "@/lib/tna-data";
 import { RatingDistributionChart } from "./RatingDistributionChart";
 import { SkillLevelBreakdown } from "./SkillLevelBreakdown";
 
 function MiniDonut({ data }: { data: { label: string; value: number; color: string }[] }) {
   const total = data.reduce((s, d) => s + d.value, 0);
   if (total === 0) return <div className="text-slate-500 text-xs text-center py-4">No data</div>;
+
   const r = 40, cx = 56, cy = 56, circ = 2 * Math.PI * r;
-  let offset = 0;
+  const activeSegments = data.filter(d => d.value > 0);
+  const N = activeSegments.length;
+
+  const gapSize = 5;
+  const capSize = 14; // strokeWidth
+  const totalGapCirc = N * (gapSize + capSize);
+  const remainingCirc = circ - totalGapCirc;
+  const useGaps = N > 1 && remainingCirc > 0;
+
+  let currentOffset = useGaps ? (gapSize + capSize) / 2 : 0;
+  let flatOffset = 0;
+
   return (
-    <div className="flex items-center gap-6">
+    <div className="flex items-center gap-6 w-full">
       <svg width="112" height="112" className="flex-shrink-0">
-        {data.map(({ value, color, label }) => {
-          if (value === 0) return null;
-          const pct = value / total;
-          const dash = pct * circ;
-          const el = (
-            <circle key={label} cx={cx} cy={cy} r={r} fill="none" stroke={color} strokeWidth="14"
-              strokeDasharray={`${dash} ${circ - dash}`}
-              strokeDashoffset={-offset * circ} transform={`rotate(-90 ${cx} ${cy})`}
-              strokeLinecap="round" style={{ transition: "stroke-dasharray 0.6s ease" }}
-            />
-          );
-          offset += pct;
-          return el;
-        })}
-        <text x={cx} y={cy + 6} textAnchor="middle" fill="var(--text-base)" fontSize="18" fontWeight="bold">{total}</text>
+        {N === 1 ? (
+          <circle cx={cx} cy={cy} r={r} fill="none" stroke={activeSegments[0].color} strokeWidth="14" />
+        ) : (
+          activeSegments.map(({ value, color, label }) => {
+            const pct = value / total;
+            if (useGaps) {
+              const dash = pct * remainingCirc;
+              const el = (
+                <circle key={label} cx={cx} cy={cy} r={r} fill="none" stroke={color} strokeWidth="14"
+                  strokeDasharray={`${dash} ${circ - dash}`}
+                  strokeDashoffset={-currentOffset} transform={`rotate(-90 ${cx} ${cy})`}
+                  strokeLinecap="round" style={{ transition: "stroke-dasharray 0.6s ease" }}
+                />
+              );
+              currentOffset += dash + (gapSize + capSize);
+              return el;
+            } else {
+              const dash = pct * circ;
+              const el = (
+                <circle key={label} cx={cx} cy={cy} r={r} fill="none" stroke={color} strokeWidth="14"
+                  strokeDasharray={`${dash} ${circ - dash}`}
+                  strokeDashoffset={-flatOffset * circ} transform={`rotate(-90 ${cx} ${cy})`}
+                  style={{ transition: "stroke-dasharray 0.6s ease" }}
+                />
+              );
+              flatOffset += pct;
+              return el;
+            }
+          })
+        )}
+        <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central" fill="var(--text-base)" fontSize="18" fontWeight="bold">{total}</text>
       </svg>
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 flex-1">
         {data.map(({ label, value, color }) => (
           <div key={label} className="flex items-center gap-2 text-xs">
             <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
@@ -112,6 +140,32 @@ export function CsvUploadView({ csvSubs, fileName, onUpload, onClear }: CsvUploa
   const reviewed = csvSubs.filter(s => s.status === "reviewed").length;
   const approved = csvSubs.filter(s => s.status === "approved").length;
   const sent = csvSubs.filter(s => s.status === "sent").length;
+
+  const clientStats = useMemo(() => {
+    if (!csvSubs || csvSubs.length === 0) return [];
+    const statsMap: Record<string, { total: number; advanced: number }> = {};
+    csvSubs.forEach(s => {
+      const client = s.participantInfo.clientName || "Unspecified";
+      if (!statsMap[client]) {
+        statsMap[client] = { total: 0, advanced: 0 };
+      }
+      statsMap[client].total += 1;
+      const isAdvanced = computeOverallLevel(s.responses, s.results) === "Advanced";
+      if (isAdvanced) {
+        statsMap[client].advanced += 1;
+      }
+    });
+
+    return Object.entries(statsMap)
+      .map(([name, data]) => ({
+        name,
+        total: data.total,
+        advanced: data.advanced,
+        advPct: Math.round((data.advanced / data.total) * 100),
+      }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 3); // top 3 clients
+  }, [csvSubs]);
 
   // Demographics mapping
   const posMap: Record<string, number> = {};
@@ -197,28 +251,83 @@ export function CsvUploadView({ csvSubs, fileName, onUpload, onClear }: CsvUploa
         ))}
       </div>
 
-      {/* Charts Row 1 — Status + Overall Classification */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+      {/* Charts Row 1 — Status + Client Analytics + Overall Classification */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Status Donut */}
-        <div className="glass-card p-6">
-          <h3 className="text-sm font-bold text-[var(--text-base)] mb-4 flex items-center gap-2">
+        <div className="glass-card p-6 flex flex-col">
+          <h3 className="text-sm font-bold text-[var(--text-base)] mb-4 flex items-center gap-2 flex-shrink-0">
             <TrendingUp className="w-4 h-4 text-[#60a5fa]" /> Status Breakdown
           </h3>
-          <MiniDonut data={[
-            { label: "Pending", value: pending, color: "#f97316" },
-            { label: "Reviewed", value: reviewed, color: "#3b82f6" },
-            { label: "Approved", value: approved, color: "#22c55e" },
-            { label: "Sent", value: sent, color: "#a855f7" },
-          ]} />
+          <div className="flex-1 flex items-center justify-center">
+            <MiniDonut data={[
+              { label: "Pending", value: pending, color: "#f97316" },
+              { label: "Reviewed", value: reviewed, color: "#3b82f6" },
+              { label: "Approved", value: approved, color: "#22c55e" },
+              { label: "Sent", value: sent, color: "#a855f7" },
+            ]} />
+          </div>
+        </div>
+
+        {/* Corporate Client Analytics */}
+        <div className="glass-card p-6 h-full flex flex-col">
+          <h3 className="text-sm font-bold text-[var(--text-base)] mb-1 flex items-center gap-2 flex-shrink-0">
+            <Building2 className="w-4 h-4 text-[#60a5fa]" /> Client Breakdown
+          </h3>
+          <p className="text-xs text-[var(--text-muted)] mb-4 flex-shrink-0">Trainees and proficiency by client group</p>
+          
+          <div className="flex-1 flex flex-col justify-center gap-4">
+            {clientStats.length === 0 ? (
+              <p className="text-xs text-slate-500 text-center py-4">No client data available</p>
+            ) : (
+              clientStats.map(client => (
+                <div key={client.name} className="space-y-1.5">
+                  <div className="flex items-center justify-between text-xs font-semibold">
+                    <span className="text-[var(--text-base)] truncate max-w-[70%]" title={client.name}>{client.name}</span>
+                    <span className="text-[var(--text-muted)]">{client.total} trainee{client.total !== 1 ? "s" : ""}</span>
+                  </div>
+                  
+                  {/* Segmented/Stacked progress bar */}
+                  <div className="h-2 w-full bg-[var(--bg-surface)] rounded-full overflow-hidden flex">
+                    {/* Advanced (Blue) */}
+                    {client.advanced > 0 && (
+                      <div 
+                        className="h-full bg-[#3b82f6] bar-animate" 
+                        style={{ width: `${client.advPct}%` }}
+                        title={`Advanced: ${client.advanced} (${client.advPct}%)`}
+                      />
+                    )}
+                    {/* Basic (Orange) */}
+                    {client.total - client.advanced > 0 && (
+                      <div 
+                        className="h-full bg-[#f97316] bar-animate" 
+                        style={{ width: `${100 - client.advPct}%` }}
+                        title={`Basic: ${client.total - client.advanced} (${100 - client.advPct}%)`}
+                      />
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between text-[10px] text-[var(--text-muted)]">
+                    <span className="flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#3b82f6]" /> {client.advPct}% Advanced
+                    </span>
+                    <span>
+                      {100 - client.advPct}% Basic
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
 
         {/* Overall Basic/Advanced Classification */}
-        <div className="glass-card p-6">
-          <h3 className="text-sm font-bold text-[var(--text-base)] mb-1 flex items-center gap-2">
+        <div className="glass-card p-6 h-full flex flex-col">
+          <h3 className="text-sm font-bold text-[var(--text-base)] mb-1 flex items-center gap-2 flex-shrink-0">
             <BarChart3 className="w-4 h-4 text-[#60a5fa]" /> Overall Classification
           </h3>
-          <p className="text-xs text-[var(--text-muted)] mb-4">Average score classification of uploaded respondents</p>
-          <RatingDistributionChart submissions={csvSubs} isCsv={true} />
+          <p className="text-xs text-[var(--text-muted)] mb-4 flex-shrink-0">Average score classification of uploaded respondents</p>
+          <div className="flex-1 flex flex-col justify-center">
+            <RatingDistributionChart submissions={csvSubs} isCsv={true} />
+          </div>
         </div>
       </div>
 

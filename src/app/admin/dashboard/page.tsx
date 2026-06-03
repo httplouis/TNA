@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -8,7 +8,7 @@ import {
   LayoutDashboard, ClipboardList, CheckCircle2, Clock, Send, LogOut,
   Eye, Users, Search, Filter, ChevronRight, FolderOpen, Settings,
   Download, TrendingUp, BarChart3, AlertTriangle, Upload, Menu, X,
-  MessageCircle,
+  MessageCircle, Building2,
 } from "lucide-react";
 
 import {
@@ -47,33 +47,66 @@ function formatDate(iso: string) {
 function DonutChart({ data }: { data: { label: string; value: number; color: string }[] }) {
   const total = data.reduce((s, d) => s + d.value, 0);
   if (total === 0) return <div className="flex items-center justify-center h-32 text-slate-600 text-sm">No data yet</div>;
-  let offset = 0;
-  const r = 40, cx = 56, cy = 56, circ = 2 * Math.PI * r;
+
+  const r = 50, cx = 80, cy = 80, circ = 2 * Math.PI * r;
+  const activeSegments = data.filter(d => d.value > 0);
+  const N = activeSegments.length;
+
+  // Spacing values
+  const gapSize = 5;
+  const capSize = 14; // strokeWidth
+  const totalGapCirc = N * (gapSize + capSize);
+  const remainingCirc = circ - totalGapCirc;
+  const useGaps = N > 1 && remainingCirc > 0;
+
+  let currentOffset = useGaps ? (gapSize + capSize) / 2 : 0;
+  let flatOffset = 0;
+
   return (
-    <div className="flex items-center gap-6">
-      <svg width="112" height="112" className="flex-shrink-0">
-        {data.map(({ value, color, label }) => {
-          if (value === 0) return null;
-          const pct = value / total;
-          const dash = pct * circ;
-          const el = (
-            <circle key={label} cx={cx} cy={cy} r={r} fill="none" stroke={color} strokeWidth="14"
-              strokeDasharray={`${dash} ${circ - dash}`}
-              strokeDashoffset={-offset * circ} transform={`rotate(-90 ${cx} ${cy})`}
-              strokeLinecap="round" style={{ transition: "stroke-dasharray 0.6s ease" }}
-            />
-          );
-          offset += pct;
-          return el;
-        })}
-        <text x={cx} y={cy + 6} textAnchor="middle" fill="var(--text-base)" fontSize="18" fontWeight="bold">{total}</text>
-      </svg>
-      <div className="space-y-2">
+    <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row items-center justify-center gap-4 sm:gap-8 lg:gap-4 xl:gap-8 w-full">
+      <div className="flex items-center justify-center min-h-[170px] lg:min-h-[160px] xl:min-h-[170px]">
+        <svg width="160" height="160" className="max-w-full h-auto">
+          {N === 1 ? (
+            <circle cx={cx} cy={cy} r={r} fill="none" stroke={activeSegments[0].color} strokeWidth="14" />
+          ) : (
+            activeSegments.map(({ value, color, label }) => {
+              const pct = value / total;
+              if (useGaps) {
+                const dash = pct * remainingCirc;
+                const el = (
+                  <circle key={label} cx={cx} cy={cy} r={r} fill="none" stroke={color} strokeWidth="14"
+                    strokeDasharray={`${dash} ${circ - dash}`}
+                    strokeDashoffset={-currentOffset} transform={`rotate(-90 ${cx} ${cy})`}
+                    strokeLinecap="round" style={{ transition: "stroke-dasharray 0.6s ease" }}
+                  />
+                );
+                currentOffset += dash + (gapSize + capSize);
+                return el;
+              } else {
+                const dash = pct * circ;
+                const el = (
+                  <circle key={label} cx={cx} cy={cy} r={r} fill="none" stroke={color} strokeWidth="14"
+                    strokeDasharray={`${dash} ${circ - dash}`}
+                    strokeDashoffset={-flatOffset * circ} transform={`rotate(-90 ${cx} ${cy})`}
+                    style={{ transition: "stroke-dasharray 0.6s ease" }}
+                  />
+                );
+                flatOffset += pct;
+                return el;
+              }
+            })
+          )}
+          <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central" fill="var(--text-base)" fontSize="22" fontWeight="bold">{total}</text>
+        </svg>
+      </div>
+      <div className="flex flex-col justify-center gap-3 w-full lg:w-auto xl:w-full flex-1">
         {data.map(({ label, value, color }) => (
-          <div key={label} className="flex items-center gap-2 text-xs">
-            <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-            <span className="text-[var(--text-muted)]">{label}</span>
-            <span className="font-bold ml-auto pl-3" style={{ color: 'var(--text-base)' }}>{value}</span>
+          <div key={label} className="flex items-center justify-between gap-3 text-sm">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+              <span className="text-[var(--text-base)]">{label}</span>
+            </div>
+            <span className="font-semibold text-[var(--text-base)]">{value}</span>
           </div>
         ))}
       </div>
@@ -447,6 +480,32 @@ export default function AdminDashboardPage() {
   const approved = submissions.filter(s => s.status === "approved").length;
   const sent     = submissions.filter(s => s.status === "sent").length;
 
+  const clientStats = useMemo(() => {
+    if (!submissions || submissions.length === 0) return [];
+    const statsMap: Record<string, { total: number; advanced: number }> = {};
+    submissions.forEach(s => {
+      const client = s.participantInfo.clientName || "Unspecified";
+      if (!statsMap[client]) {
+        statsMap[client] = { total: 0, advanced: 0 };
+      }
+      statsMap[client].total += 1;
+      const isAdvanced = computeOverallLevel(s.responses, s.results) === "Advanced";
+      if (isAdvanced) {
+        statsMap[client].advanced += 1;
+      }
+    });
+
+    return Object.entries(statsMap)
+      .map(([name, data]) => ({
+        name,
+        total: data.total,
+        advanced: data.advanced,
+        advPct: Math.round((data.advanced / data.total) * 100),
+      }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 3); // top 3 clients
+  }, [submissions]);
+
   const navItems: { id: AdminView; label: string; icon: React.ElementType }[] = [
     { id: "dashboard",   label: "Dashboard",   icon: LayoutDashboard },
     { id: "submissions", label: "Submissions",  icon: ClipboardList },
@@ -545,28 +604,83 @@ export default function AdminDashboardPage() {
                 ))}
               </div>
 
-              {/* Charts Row 1 — Status + Overall Classification */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+              {/* Charts Row 1 — Status + Client Analytics + Overall Classification */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6 items-stretch">
                 {/* Status Donut */}
-                <div className="glass-card p-6">
-                  <h3 className="text-sm font-bold text-[var(--text-base)] mb-4 flex items-center gap-2">
+                <div className="glass-card p-6 h-full flex flex-col">
+                  <h3 className="text-sm font-bold text-[var(--text-base)] mb-4 flex items-center gap-2 flex-shrink-0">
                     <TrendingUp className="w-4 h-4 text-[#60a5fa]" /> Status Breakdown
                   </h3>
-                  <DonutChart data={[
-                    { label: "Pending",  value: pending,  color: "#f97316" },
-                    { label: "Reviewed", value: submissions.filter(s => s.status === "reviewed").length, color: "#3b82f6" },
-                    { label: "Approved", value: approved, color: "#22c55e" },
-                    { label: "Sent",     value: sent,     color: "#a855f7" },
-                  ]} />
+                  <div className="flex-1 flex items-center justify-center">
+                    <DonutChart data={[
+                      { label: "Pending",  value: pending,  color: "#f97316" },
+                      { label: "Reviewed", value: submissions.filter(s => s.status === "reviewed").length, color: "#3b82f6" },
+                      { label: "Approved", value: approved, color: "#22c55e" },
+                      { label: "Sent",     value: sent,     color: "#a855f7" },
+                    ]} />
+                  </div>
+                </div>
+
+                {/* Corporate Client Analytics */}
+                <div className="glass-card p-6 h-full flex flex-col">
+                  <h3 className="text-sm font-bold text-[var(--text-base)] mb-1 flex items-center gap-2 flex-shrink-0">
+                    <Building2 className="w-4 h-4 text-[#60a5fa]" /> Client Breakdown
+                  </h3>
+                  <p className="text-xs text-[var(--text-muted)] mb-4 flex-shrink-0">Trainees and proficiency by client group</p>
+                  
+                  <div className="flex-1 flex flex-col justify-center gap-4">
+                    {clientStats.length === 0 ? (
+                      <p className="text-xs text-slate-500 text-center py-4">No client data available</p>
+                    ) : (
+                      clientStats.map(client => (
+                        <div key={client.name} className="space-y-1.5">
+                          <div className="flex items-center justify-between text-xs font-semibold">
+                            <span className="text-[var(--text-base)] truncate max-w-[70%]" title={client.name}>{client.name}</span>
+                            <span className="text-[var(--text-muted)]">{client.total} trainee{client.total !== 1 ? "s" : ""}</span>
+                          </div>
+                          
+                          {/* Segmented/Stacked progress bar */}
+                          <div className="h-2 w-full bg-[var(--bg-surface)] rounded-full overflow-hidden flex">
+                            {/* Advanced (Blue) */}
+                            {client.advanced > 0 && (
+                              <div 
+                                className="h-full bg-[#3b82f6] bar-animate" 
+                                style={{ width: `${client.advPct}%` }}
+                                title={`Advanced: ${client.advanced} (${client.advPct}%)`}
+                              />
+                            )}
+                            {/* Basic (Orange) */}
+                            {client.total - client.advanced > 0 && (
+                              <div 
+                                className="h-full bg-[#f97316] bar-animate" 
+                                style={{ width: `${100 - client.advPct}%` }}
+                                title={`Basic: ${client.total - client.advanced} (${100 - client.advPct}%)`}
+                              />
+                            )}
+                          </div>
+                          <div className="flex items-center justify-between text-[10px] text-[var(--text-muted)]">
+                            <span className="flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#3b82f6]" /> {client.advPct}% Advanced
+                            </span>
+                            <span>
+                              {100 - client.advPct}% Basic
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
 
                 {/* Overall Basic/Advanced Classification */}
-                <div className="glass-card p-6">
-                  <h3 className="text-sm font-bold text-[var(--text-base)] mb-1 flex items-center gap-2">
+                <div className="glass-card p-6 h-full flex flex-col">
+                  <h3 className="text-sm font-bold text-[var(--text-base)] mb-1 flex items-center gap-2 flex-shrink-0">
                     <BarChart3 className="w-4 h-4 text-[#60a5fa]" /> Overall Classification
                   </h3>
-                  <p className="text-xs text-[var(--text-muted)] mb-4">Click a level to see respondent details &amp; training needs</p>
-                  <RatingDistributionChart submissions={submissions} />
+                  <p className="text-xs text-[var(--text-muted)] mb-4 flex-shrink-0">Click a level to see respondent details &amp; training needs</p>
+                  <div className="flex-1 flex flex-col justify-center">
+                    <RatingDistributionChart submissions={submissions} />
+                  </div>
                 </div>
               </div>
 
