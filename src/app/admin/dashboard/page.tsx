@@ -11,10 +11,11 @@ import {
 } from "lucide-react";
 
 import {
-  getSubmissions, exportToCSV, ALL_CATEGORIES, computeOverallLevel,
+  exportToCSV, ALL_CATEGORIES, computeOverallLevel,
   computeResults, getCategoryLevelBreakdown,
   type Submission,
 } from "@/lib/tna-data";
+import { fetchSubmissions } from "@/lib/submissionsApi";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { RatingDistributionChart } from "@/components/dashboard/RatingDistributionChart";
 import { SkillLevelBreakdown } from "@/components/dashboard/SkillLevelBreakdown";
@@ -361,8 +362,8 @@ function SettingsView({ onLogout }: { onLogout: () => void }) {
 
 function ExportButton() {
   const [done, setDone] = useState(false);
-  function handleExport() {
-    const subs = getSubmissions();
+  async function handleExport() {
+    const subs = await fetchSubmissions();
     exportToCSV(subs);
     setDone(true);
     setTimeout(() => setDone(false), 3000);
@@ -386,14 +387,45 @@ export default function AdminDashboardPage() {
   const [view, setView]               = useState<AdminView>("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const refresh = useCallback(() => { setSubmissions(getSubmissions()); }, []);
+  const [csvSubmissions, setCsvSubmissions] = useState<Submission[] | null>(null);
+  const [csvFileName, setCsvFileName]       = useState<string>("");
+
+  const refresh = useCallback(async () => { setSubmissions(await fetchSubmissions()); }, []);
 
   useEffect(() => {
     if (!sessionStorage.getItem("tna_admin")) { router.replace("/admin"); return; }
-    refresh(); setLoading(false);
+    (async () => { await refresh(); setLoading(false); })();
+
+    try {
+      const savedCsv = sessionStorage.getItem("tna_csv_submissions");
+      const savedName = sessionStorage.getItem("tna_csv_filename");
+      if (savedCsv && savedName) {
+        setCsvSubmissions(JSON.parse(savedCsv));
+        setCsvFileName(savedName);
+      }
+    } catch (e) {
+      console.error("Failed to load persisted CSV data", e);
+    }
   }, [router, refresh]);
 
-  function handleLogout() { sessionStorage.removeItem("tna_admin"); router.push("/admin"); }
+  const updateCsvData = (subs: Submission[] | null, name: string) => {
+    setCsvSubmissions(subs);
+    setCsvFileName(name);
+    if (subs) {
+      sessionStorage.setItem("tna_csv_submissions", JSON.stringify(subs));
+      sessionStorage.setItem("tna_csv_filename", name);
+    } else {
+      sessionStorage.removeItem("tna_csv_submissions");
+      sessionStorage.removeItem("tna_csv_filename");
+    }
+  };
+
+  function handleLogout() {
+    sessionStorage.removeItem("tna_admin");
+    sessionStorage.removeItem("tna_csv_submissions");
+    sessionStorage.removeItem("tna_csv_filename");
+    router.push("/admin");
+  }
 
   const total    = submissions.length;
   const pending  = submissions.filter(s => s.status === "pending").length;
@@ -704,7 +736,12 @@ export default function AdminDashboardPage() {
                 </h3>
                 <p className="text-sm text-[var(--text-muted)]">Upload a CSV exported from this portal to analyze it in isolation. <strong>This does not affect the main dashboard or saved data.</strong></p>
               </div>
-              <CsvUploadView />
+              <CsvUploadView
+                csvSubs={csvSubmissions}
+                fileName={csvFileName}
+                onUpload={(subs, name) => updateCsvData(subs, name)}
+                onClear={() => updateCsvData(null, "")}
+              />
             </div>
           )}
 

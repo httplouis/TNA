@@ -5,7 +5,8 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { CheckCircle2, Clock, Mail, ArrowLeft, BookOpen, TrendingUp } from "lucide-react";
-import { getSubmissions, type Submission, type CategoryResult } from "@/lib/tna-data";
+import { type Submission, type CategoryResult } from "@/lib/tna-data";
+import { fetchSubmissions } from "@/lib/submissionsApi";
 
 const LEVEL_COLOR: Record<string, string> = {
   "Expert": "#3b82f6", "Proficient": "#22c55e", "Moderate": "#eab308",
@@ -123,10 +124,14 @@ export default function SuccessClient() {
   const [latestResults, setLatestResults] = useState<CategoryResult[] | null>(null);
 
   useEffect(() => {
-    const all = getSubmissions();
-    if (all.length === 0) return;
-    const latest = all[all.length - 1] as Submission;
-    if (latest.results && latest.results.length > 0) setLatestResults(latest.results);
+    let mounted = true;
+    (async () => {
+      const all = await fetchSubmissions();
+      if (!mounted || !all || all.length === 0) return;
+      const latest = all[0] as Submission; // API returns ordered by submittedAt desc
+      if (latest.results && latest.results.length > 0) setLatestResults(latest.results);
+    })();
+    return () => { mounted = false; };
   }, []);
 
   return (

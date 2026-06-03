@@ -61,6 +61,14 @@ export interface Submission {
   results?:        CategoryResult[];
 }
 
+export interface SubmissionHistoryEntry {
+  id:            string;
+  submissionId:  string;
+  eventType:     string;
+  eventDetails?: Record<string, unknown>;
+  createdAt:     string;
+}
+
 export interface CategoryResult {
   category:       Category;
   avgScore:       number;   // 1–5, lower = more experienced
@@ -242,10 +250,19 @@ function getScoreLevel(avg: number): { level: TnaLevel; color: string; recommend
 }
 
 /** Compute the respondent's overall Basic/Advanced level from all responses */
-export function computeOverallLevel(responses: Response[]): TnaLevel {
-  if (responses.length === 0) return "Basic";
-  const avg = responses.reduce((sum, r) => sum + r.rating, 0) / responses.length;
-  return avg <= 2.5 ? "Advanced" : "Basic";
+export function computeOverallLevel(responses: Response[], results?: CategoryResult[]): TnaLevel {
+  if (responses && responses.length > 0) {
+    const avg = responses.reduce((sum, r) => sum + r.rating, 0) / responses.length;
+    return avg <= 2.5 ? "Advanced" : "Basic";
+  }
+  if (results && results.length > 0) {
+    const answered = results.filter(r => r.answeredCount > 0);
+    if (answered.length > 0) {
+      const avg = answered.reduce((sum, r) => sum + r.avgScore, 0) / answered.length;
+      return avg <= 2.5 ? "Advanced" : "Basic";
+    }
+  }
+  return "Basic";
 }
 
 export function computeResults(responses: Response[]): CategoryResult[] {
@@ -334,12 +351,31 @@ export function getSubmissions(): Submission[] {
   } catch { return []; }
 }
 
-export function saveSubmission(sub: Submission): void {
+export function saveSubmission(sub: Submission, sync = true): void {
   if (typeof window === "undefined") return;
   const existing = getSubmissions();
   const idx = existing.findIndex((s) => s.id === sub.id);
   if (idx >= 0) existing[idx] = sub; else existing.push(sub);
   localStorage.setItem(STORE_KEY, JSON.stringify(existing));
+  if (sync) void syncToServer(sub);
+}
+
+// Attempt to sync a submission to the server API (fire-and-forget).
+async function syncToServer(sub: Submission) {
+  try {
+    await fetch("/api/submissions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(sub),
+    });
+  } catch {
+    // ignore network errors — localStorage remains the source of truth offline
+  }
+}
+
+export function saveSubmissionToServer(sub: Submission): void {
+  // wrapper to keep compatibility with existing synchronous callers
+  void syncToServer(sub);
 }
 
 export function getSubmissionById(id: string): Submission | undefined {
@@ -374,7 +410,7 @@ export function exportToCSV(submissions: Submission[]): void {
     const results = sub.results ?? computeResults(sub.responses);
     const avgs    = ALL_CATEGORIES.map((cat) => results.find((r) => r.category === cat)?.avgScore ?? "");
     const levels  = ALL_CATEGORIES.map((cat) => results.find((r) => r.category === cat)?.level ?? "");
-    const overall = computeOverallLevel(sub.responses);
+    const overall = computeOverallLevel(sub.responses, sub.results);
     return [
       sub.id,
       new Date(sub.submittedAt).toLocaleString("en-PH"),
@@ -493,7 +529,7 @@ export const TNA_LEVEL_META: Record<TnaLevel, { label: string; color: string; de
 export function getRatingDistribution(submissions: Submission[]): Record<TnaLevel, number> {
   const counts: Record<TnaLevel, number> = { Advanced: 0, Basic: 0 };
   submissions.forEach(s => {
-    const level = computeOverallLevel(s.responses);
+    const level = computeOverallLevel(s.responses, s.results);
     counts[level]++;
   });
   return counts;
@@ -509,12 +545,14 @@ export function getTraineesAtRatingLevel(
   categoryBreakdown: { category: string; level: TnaLevel; avgScore: number; recommendations: string[] }[];
 }[] {
   return submissions
-    .filter(s => computeOverallLevel(s.responses) === level)
+    .filter(s => computeOverallLevel(s.responses, s.results) === level)
     .map(sub => {
       const results = sub.results ?? computeResults(sub.responses);
       const overallAvg = sub.responses.length > 0
         ? Math.round((sub.responses.reduce((sum, r) => sum + r.rating, 0) / sub.responses.length) * 10) / 10
-        : 0;
+        : (results && results.length > 0
+            ? Math.round((results.reduce((sum, r) => sum + r.avgScore, 0) / results.length) * 10) / 10
+            : 0);
       const categoryBreakdown = results
         .filter(r => r.answeredCount > 0)
         .map(r => ({

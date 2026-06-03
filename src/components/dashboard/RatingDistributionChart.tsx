@@ -8,7 +8,7 @@ import {
   type TnaLevel,
 } from "@/lib/tna-data";
 
-export function RatingDistributionChart({ submissions }: { submissions: Submission[] }) {
+export function RatingDistributionChart({ submissions, isCsv = false }: { submissions: Submission[]; isCsv?: boolean }) {
   const router = useRouter();
   const counts = getRatingDistribution(submissions);
   const total  = submissions.length;
@@ -28,21 +28,34 @@ export function RatingDistributionChart({ submissions }: { submissions: Submissi
 
         return (
           <div key={lvl} className="rounded-xl border border-[var(--border)] overflow-hidden">
-            {/* Clickable row → navigates to detail page */}
-            <button
-              onClick={() => router.push(`/admin/dashboard/level/${lvl.toLowerCase()}`)}
-              className="w-full px-4 py-3.5 flex items-center gap-3 hover:bg-[var(--bg-hover)] transition-colors text-left group"
-            >
-              <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: meta.color }} />
-              <div className="flex-1 min-w-0">
-                <span className="text-sm font-semibold text-[var(--text-base)]">{meta.label}</span>
-                <span className="ml-2 text-xs text-[var(--text-muted)] hidden sm:inline">{meta.description}</span>
+            {/* Clickable row → navigates to detail page if not CSV */}
+            {isCsv ? (
+              <div className="w-full px-4 py-3.5 flex items-center gap-3 text-left">
+                <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: meta.color }} />
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-semibold text-[var(--text-base)]">{meta.label}</span>
+                  <span className="ml-2 text-xs text-[var(--text-muted)] hidden sm:inline">{meta.description}</span>
+                </div>
+                <span className="text-sm font-bold flex-shrink-0" style={{ color: meta.color }}>
+                  {count} ({pct}%)
+                </span>
               </div>
-              <span className="text-sm font-bold flex-shrink-0" style={{ color: meta.color }}>
-                {count} ({pct}%)
-              </span>
-              <ChevronRight className="w-4 h-4 text-[var(--text-muted)] flex-shrink-0 group-hover:translate-x-0.5 transition-transform" />
-            </button>
+            ) : (
+              <button
+                onClick={() => router.push(`/admin/dashboard/level/${lvl.toLowerCase()}`)}
+                className="w-full px-4 py-3.5 flex items-center gap-3 hover:bg-[var(--bg-hover)] transition-colors text-left group"
+              >
+                <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: meta.color }} />
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-semibold text-[var(--text-base)]">{meta.label}</span>
+                  <span className="ml-2 text-xs text-[var(--text-muted)] hidden sm:inline">{meta.description}</span>
+                </div>
+                <span className="text-sm font-bold flex-shrink-0" style={{ color: meta.color }}>
+                  {count} ({pct}%)
+                </span>
+                <ChevronRight className="w-4 h-4 text-[var(--text-muted)] flex-shrink-0 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+            )}
 
             {/* Progress bar */}
             <div className="h-1.5 bg-[var(--bg-surface)] mx-4 mb-3 rounded-full overflow-hidden">
@@ -56,7 +69,7 @@ export function RatingDistributionChart({ submissions }: { submissions: Submissi
       })}
 
       <p className="text-xs text-[var(--text-muted)] pt-1">
-        Total respondents: {total} · Click a level to view details · Classification: avg ≤ 2.5 = Advanced
+        Total respondents: {total} {isCsv ? "" : "· Click a level to view details"} · Classification: avg ≤ 2.5 = Advanced
       </p>
     </div>
   );

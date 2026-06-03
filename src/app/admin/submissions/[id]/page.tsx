@@ -10,9 +10,10 @@ import {
   Loader2, ExternalLink, FileText, Download,
 } from "lucide-react";
 import {
-  getSubmissionById, saveSubmission, ALL_CATEGORIES, QUESTIONS, SURVEY_SECTIONS,
-  TRAINING_MAP, exportToCSV, type Submission, type CategoryResult, type Category,
+  ALL_CATEGORIES, QUESTIONS, SURVEY_SECTIONS,
+  TRAINING_MAP, exportToCSV, type Submission, type SubmissionHistoryEntry, type CategoryResult, type Category,
 } from "@/lib/tna-data";
+import { fetchSubmissionById, fetchSubmissionHistory, patchSubmission } from "@/lib/submissionsApi";
 
 const STATUS_FLOW = ["pending", "reviewed", "approved", "sent"] as const;
 type TStatus = typeof STATUS_FLOW[number];
@@ -85,31 +86,48 @@ export default function SubmissionReviewPage({ params }: { params: Promise<{ id:
   const [notFound, setNF]         = useState(false);
   const [emailBody, setEmailBody] = useState("");
   const [emailSubject, setEmailSubject] = useState("");
+  const [history, setHistory]     = useState<SubmissionHistoryEntry[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   useEffect(() => {
     if (!sessionStorage.getItem("tna_admin")) { router.replace("/admin"); return; }
-    const found = getSubmissionById(id);
-    if (!found) { setNF(true); return; }
-    setSub(found);
-    setNotes(found.adminNotes ?? "");
-    setEmailBody(generateEmailBody(found));
-    setEmailSubject(`Your Microsoft Excel Training Needs Assessment Results — ${found.participantInfo.traineeName}`);
+    let mounted = true;
+    (async () => {
+      const found = await fetchSubmissionById(id);
+      if (!mounted) return;
+      if (!found) { setNF(true); return; }
+      setSub(found);
+      setNotes(found.adminNotes ?? "");
+      setEmailBody(generateEmailBody(found));
+      setEmailSubject(`Your Microsoft Excel Training Needs Assessment Results — ${found.participantInfo.traineeName}`);
+
+      setHistoryLoading(true);
+      const historyEntries = await fetchSubmissionHistory(id);
+      if (!mounted) return;
+      setHistory(historyEntries);
+      setHistoryLoading(false);
+    })();
+    return () => { mounted = false; };
   }, [id, router]);
 
   async function advance(newStatus: TStatus) {
     if (!sub) return;
     setSaving(true);
     const updated: Submission = { ...sub, status: newStatus, adminNotes: notes };
-    saveSubmission(updated); await new Promise(r => setTimeout(r, 600));
-    setSub(updated); setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2500);
+    const res = await patchSubmission(sub.id, { status: newStatus, adminNotes: notes });
+    setSub(res ?? updated);
+    await new Promise(r => setTimeout(r, 600));
+    setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2500);
   }
 
   async function saveNotes() {
     if (!sub) return;
     setSaving(true);
     const updated = { ...sub, adminNotes: notes };
-    saveSubmission(updated); await new Promise(r => setTimeout(r, 500));
-    setSub(updated); setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2500);
+    const res = await patchSubmission(sub.id, { adminNotes: notes });
+    setSub(res ?? updated);
+    await new Promise(r => setTimeout(r, 500));
+    setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2500);
   }
 
   function openMailto() {
@@ -234,6 +252,30 @@ export default function SubmissionReviewPage({ params }: { params: Promise<{ id:
                 {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
                 {saved ? "Saved!" : "Save Notes"}
               </button>
+            </div>
+
+            {/* Submission History */}
+            <div className="glass-card p-5">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-3 flex items-center gap-2">
+                <Clock className="w-3.5 h-3.5" /> Submission History
+              </h2>
+              {historyLoading ? (
+                <div className="text-sm text-[var(--text-muted)]">Loading history…</div>
+              ) : history.length === 0 ? (
+                <p className="text-sm text-[var(--text-muted)]">No history events recorded yet.</p>
+              ) : (
+                <div className="space-y-3">
+                  {history.map(entry => (
+                    <div key={entry.id} className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
+                      <div className="flex items-center justify-between gap-3 mb-2 text-xs text-[var(--text-muted)]">
+                        <span className="font-semibold text-[var(--text-base)]">{entry.eventType.replace(/_/g, ' ')}</span>
+                        <span>{formatDate(entry.createdAt)}</span>
+                      </div>
+                      <pre className="text-[11px] whitespace-pre-wrap break-words text-[var(--text-muted)]">{JSON.stringify(entry.eventDetails ?? {}, null, 2)}</pre>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Actions */}

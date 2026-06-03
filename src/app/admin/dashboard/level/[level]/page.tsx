@@ -8,9 +8,10 @@ import {
   ExternalLink, Search,
 } from "lucide-react";
 import {
-  getSubmissions, getTraineesAtRatingLevel, TNA_LEVEL_META,
+  getTraineesAtRatingLevel, TNA_LEVEL_META,
   type TnaLevel, type Submission,
 } from "@/lib/tna-data";
+import { fetchSubmissions } from "@/lib/submissionsApi";
 
 export default function LevelDetailPage({ params }: { params: Promise<{ level: string }> }) {
   const { level } = use(params);
@@ -24,8 +25,7 @@ export default function LevelDetailPage({ params }: { params: Promise<{ level: s
 
   useEffect(() => {
     if (!sessionStorage.getItem("tna_admin")) { router.replace("/admin"); return; }
-    setSubmissions(getSubmissions());
-    setLoading(false);
+    (async () => { setSubmissions(await fetchSubmissions()); setLoading(false); })();
   }, [router]);
 
   const trainees = getTraineesAtRatingLevel(submissions, tnaLevel);

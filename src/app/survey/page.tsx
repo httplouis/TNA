@@ -10,6 +10,7 @@ import {
   SURVEY_SECTIONS, QUESTIONS, computeResults, saveSubmission, generateId,
   type SkillLevel, type Response, type ParticipantInfo, type OpenAnswers,
 } from "@/lib/tna-data";
+import { postSubmissionToServer } from "@/lib/submissionsApi";
 
 import PrivacyStep       from "./PrivacyStep";
 import InfoStep          from "./InfoStep";
@@ -126,7 +127,8 @@ export default function SurveyPage() {
       status:          "pending" as const,
       results,
     };
-    saveSubmission(submission);
+    saveSubmission(submission, false);
+    await postSubmissionToServer(submission);
     clearDraft();
     await new Promise(r => setTimeout(r, 1500));
     router.push(`/success?name=${encodeURIComponent(info.traineeName.split(" ")[0] || info.clientName.split(" ")[0])}`);

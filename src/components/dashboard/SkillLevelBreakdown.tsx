@@ -28,7 +28,7 @@ const COLORS: Record<TnaLevel, { text: string; bg: string; border: string; bar: 
 const PAGE_SIZE = 6;
 type Selection = { cat: Category; level: TnaLevel } | null;
 
-export function SkillLevelBreakdown({ submissions }: { submissions: Submission[] }) {
+export function SkillLevelBreakdown({ submissions, isCsv = false }: { submissions: Submission[]; isCsv?: boolean }) {
   const [collapsed, setCollapsed] = useState(false);
   const [page,      setPage]      = useState(0);
   const [selected,  setSelected]  = useState<Selection>(null);
@@ -285,12 +285,16 @@ export function SkillLevelBreakdown({ submissions }: { submissions: Submission[]
                             </span>
                           </td>
                           <td className="px-3 py-2 text-right">
-                            <Link
-                              href={`/admin/submissions/${t.id}`}
-                              className="text-[#818cf8] hover:underline"
-                            >
-                              View →
-                            </Link>
+                            {isCsv ? (
+                              <span className="text-[var(--text-muted)] cursor-not-allowed">View →</span>
+                            ) : (
+                              <Link
+                                href={`/admin/submissions/${t.id}`}
+                                className="text-[#818cf8] hover:underline"
+                              >
+                                View →
+                              </Link>
+                            )}
                           </td>
                         </tr>
                       ))}
