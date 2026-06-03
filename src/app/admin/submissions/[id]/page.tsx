@@ -42,6 +42,138 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-PH", { month: "long", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
+function renderEventDetails(entry: SubmissionHistoryEntry) {
+  const details = entry.eventDetails || {};
+  const eventType = entry.eventType;
+
+  const renderStatusBadge = (status: string) => {
+    const scfg = STATUS_CONFIG[status as TStatus];
+    if (!scfg) return <span className="text-xs font-semibold text-[var(--text-base)] capitalize">{status}</span>;
+    const Icon = scfg.icon;
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap"
+        style={{ color: scfg.color, backgroundColor: scfg.bg, border: `1px solid ${scfg.border}` }}>
+        <Icon className="w-2.5 h-2.5" />{scfg.label}
+      </span>
+    );
+  };
+
+  if (eventType === "created") {
+    return (
+      <div className="space-y-1.5 text-xs text-[var(--text-muted)]">
+        <p>The trainee submitted their Excel self-assessment.</p>
+        <div className="flex flex-col gap-1.5 bg-[var(--bg-page)]/50 p-2.5 rounded-lg border border-[var(--border)] mt-1.5">
+          <div className="flex justify-between items-center">
+            <span>Initial Status:</span>
+            {renderStatusBadge(details.status || "pending")}
+          </div>
+          {details.submittedAt && (
+            <div className="flex justify-between items-center text-[11px]">
+              <span>Submitted On:</span>
+              <span className="text-[var(--text-base)] font-medium">
+                {new Date(details.submittedAt).toLocaleDateString("en-PH", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit"
+                })}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (eventType === "status_updated") {
+    return (
+      <div className="space-y-2 text-xs text-[var(--text-muted)]">
+        <div className="flex items-center gap-2">
+          <span>Status changed to:</span>
+          {renderStatusBadge(details.status || "")}
+        </div>
+        {details.adminNotes && (
+          <div className="mt-1.5 bg-[var(--bg-page)]/50 p-2.5 rounded-lg border border-[var(--border)]">
+            <span className="block text-[9px] uppercase font-bold tracking-wider text-[var(--text-muted)] mb-1">
+              Admin Notes
+            </span>
+            <p className="text-[var(--text-base)] italic whitespace-pre-wrap leading-relaxed">
+              "{details.adminNotes}"
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (eventType === "notes_updated") {
+    return (
+      <div className="space-y-2 text-xs text-[var(--text-muted)]">
+        <p>Admin notes were updated.</p>
+        {details.adminNotes && (
+          <div className="mt-1.5 bg-[var(--bg-page)]/50 p-2.5 rounded-lg border border-[var(--border)]">
+            <p className="text-[var(--text-base)] italic whitespace-pre-wrap leading-relaxed">
+              "{details.adminNotes}"
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Fallback for custom or unrecognized events
+  const keys = Object.keys(details);
+  if (keys.length === 0) return null;
+
+  return (
+    <div className="space-y-1.5 text-xs bg-[var(--bg-page)]/50 p-2.5 rounded-lg border border-[var(--border)]">
+      {keys.map((key) => {
+        const val = details[key];
+        const formattedKey = key
+          .replace(/([A-Z])/g, " $1")
+          .replace(/_/g, " ")
+          .replace(/^\w/, (c) => c.toUpperCase());
+
+        let formattedVal = "";
+        if (typeof val === "object" && val !== null) {
+          formattedVal = JSON.stringify(val);
+        } else if (typeof val === "boolean") {
+          formattedVal = val ? "Yes" : "No";
+        } else {
+          formattedVal = String(val);
+        }
+
+        if (typeof val === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(val)) {
+          formattedVal = new Date(val).toLocaleDateString("en-PH", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+          });
+        }
+
+        if (key === "status") {
+          return (
+            <div key={key} className="flex justify-between items-center py-1 border-b border-white/5 last:border-0">
+              <span className="text-[var(--text-muted)]">{formattedKey}:</span>
+              {renderStatusBadge(val)}
+            </div>
+          );
+        }
+
+        return (
+          <div key={key} className="flex justify-between items-start py-1 border-b border-white/5 last:border-0 gap-2">
+            <span className="text-[var(--text-muted)] flex-shrink-0">{formattedKey}:</span>
+            <span className="text-[var(--text-base)] font-medium text-right break-all">{formattedVal}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function generateEmailBody(sub: Submission): string {
   if (!sub.results) return "";
   const firstName = sub.participantInfo.traineeName.split(" ")[0] || sub.participantInfo.clientName;
@@ -267,11 +399,13 @@ export default function SubmissionReviewPage({ params }: { params: Promise<{ id:
                 <div className="space-y-3">
                   {history.map(entry => (
                     <div key={entry.id} className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
-                      <div className="flex items-center justify-between gap-3 mb-2 text-xs text-[var(--text-muted)]">
-                        <span className="font-semibold text-[var(--text-base)]">{(entry.eventType ?? '').replace(/_/g, ' ')}</span>
+                      <div className="flex items-center justify-between gap-3 mb-3 text-xs text-[var(--text-muted)]">
+                        <span className="font-semibold text-[var(--text-base)] uppercase tracking-wider text-[11px]">{(entry.eventType ?? '').replace(/_/g, ' ')}</span>
                         <span>{formatDate(entry.createdAt ?? (entry as any).created_at ?? new Date().toISOString())}</span>
                       </div>
-                      <pre className="text-[11px] whitespace-pre-wrap break-words text-[var(--text-muted)]">{JSON.stringify(entry.eventDetails ?? {}, null, 2)}</pre>
+                      <div>
+                        {renderEventDetails(entry)}
+                      </div>
                     </div>
                   ))}
                 </div>
