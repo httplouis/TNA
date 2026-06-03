@@ -69,6 +69,20 @@ export interface SubmissionHistoryEntry {
   createdAt:     string;
 }
 
+export interface FeedbackPayload {
+  name:    string;
+  email?:  string;
+  message: string;
+}
+
+export interface FeedbackEntry {
+  id:        string;
+  name:      string;
+  email?:    string;
+  message:   string;
+  createdAt: string;
+}
+
 export interface CategoryResult {
   category:       Category;
   avgScore:       number;   // 1–5, lower = more experienced

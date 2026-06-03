@@ -8,21 +8,24 @@ import {
   LayoutDashboard, ClipboardList, CheckCircle2, Clock, Send, LogOut,
   Eye, Users, Search, Filter, ChevronRight, FolderOpen, Settings,
   Download, TrendingUp, BarChart3, AlertTriangle, Upload, Menu, X,
+  MessageCircle,
 } from "lucide-react";
 
 import {
   exportToCSV, ALL_CATEGORIES, computeOverallLevel,
   computeResults, getCategoryLevelBreakdown,
   type Submission,
+  type FeedbackEntry,
 } from "@/lib/tna-data";
 import { fetchSubmissions } from "@/lib/submissionsApi";
+import { fetchFeedback } from "@/lib/feedbackApi";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { RatingDistributionChart } from "@/components/dashboard/RatingDistributionChart";
 import { SkillLevelBreakdown } from "@/components/dashboard/SkillLevelBreakdown";
 import { CsvUploadView } from "@/components/dashboard/CsvUploadView";
 
 type FilterStatus = "all" | "pending" | "reviewed" | "approved" | "sent";
-type AdminView    = "dashboard" | "submissions" | "history" | "csv" | "settings";
+type AdminView    = "dashboard" | "submissions" | "history" | "csv" | "feedback" | "settings";
 
 const STATUS_CONFIG = {
   pending:  { label: "Pending Review", color: "#f97316", bg: "rgba(249,115,22,0.15)", border: "rgba(249,115,22,0.3)", icon: Clock },
@@ -386,6 +389,8 @@ export default function AdminDashboardPage() {
   const [loading, setLoading]         = useState(true);
   const [view, setView]               = useState<AdminView>("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [feedbackEntries, setFeedbackEntries] = useState<FeedbackEntry[]>([]);
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
 
   const [csvSubmissions, setCsvSubmissions] = useState<Submission[] | null>(null);
   const [csvFileName, setCsvFileName]       = useState<string>("");
@@ -407,6 +412,16 @@ export default function AdminDashboardPage() {
       console.error("Failed to load persisted CSV data", e);
     }
   }, [router, refresh]);
+
+  useEffect(() => {
+    if (view !== "feedback") return;
+    setFeedbackLoading(true);
+    (async () => {
+      const items = await fetchFeedback();
+      setFeedbackEntries(items);
+      setFeedbackLoading(false);
+    })();
+  }, [view]);
 
   const updateCsvData = (subs: Submission[] | null, name: string) => {
     setCsvSubmissions(subs);
@@ -436,6 +451,7 @@ export default function AdminDashboardPage() {
     { id: "dashboard",   label: "Dashboard",   icon: LayoutDashboard },
     { id: "submissions", label: "Submissions",  icon: ClipboardList },
     { id: "history",     label: "History",      icon: FolderOpen },
+    { id: "feedback",    label: "Feedback",     icon: MessageCircle },
     { id: "csv",         label: "CSV Upload",   icon: Upload },
     { id: "settings",    label: "Settings",     icon: Settings },
   ];
@@ -727,6 +743,46 @@ export default function AdminDashboardPage() {
           )}
 
           {view === "history" && <HistoryView submissions={submissions} />}
+
+          {view === "feedback" && (
+            <div className="space-y-6">
+              <div className="glass-card p-6 bg-[var(--bg-card)]">
+                <h3 className="text-lg font-bold text-[var(--text-base)] mb-2 flex items-center gap-2">
+                  <MessageCircle className="w-5 h-5 text-[#60a5fa]" /> Feedback & Suggestions
+                </h3>
+                <p className="text-sm text-[var(--text-muted)]">Review all feedback submitted by users after completing the assessment.</p>
+              </div>
+
+              {feedbackLoading ? (
+                <div className="glass-card p-6 text-sm text-[var(--text-muted)]">Loading feedback…</div>
+              ) : feedbackEntries.length === 0 ? (
+                <div className="glass-card p-6 text-sm text-[var(--text-muted)]">No feedback has been submitted yet.</div>
+              ) : (
+                <div className="glass-card overflow-x-auto p-4">
+                  <table className="min-w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-[var(--border)]">
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">Submitted</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">Name</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">Email</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">Message</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {feedbackEntries.map(item => (
+                        <tr key={item.id} className="border-b border-[var(--border)] hover:bg-[var(--bg-hover)] transition-colors">
+                          <td className="px-4 py-4 text-[var(--text-muted)]">{new Date(item.createdAt).toLocaleString("en-PH", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}</td>
+                          <td className="px-4 py-4 font-medium text-[var(--text-base)]">{item.name || "Anonymous"}</td>
+                          <td className="px-4 py-4 text-[var(--text-muted)]">{item.email || "—"}</td>
+                          <td className="px-4 py-4 text-[var(--text-muted)] break-words max-w-xl">{item.message}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
 
           {view === "csv" && (
             <div className="space-y-6">

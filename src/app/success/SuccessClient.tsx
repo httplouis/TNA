@@ -7,6 +7,7 @@ import Image from "next/image";
 import { CheckCircle2, Clock, Mail, ArrowLeft, BookOpen, TrendingUp } from "lucide-react";
 import { type Submission, type CategoryResult } from "@/lib/tna-data";
 import { fetchSubmissions } from "@/lib/submissionsApi";
+import { postFeedback } from "@/lib/feedbackApi";
 
 const LEVEL_COLOR: Record<string, string> = {
   "Expert": "#3b82f6", "Proficient": "#22c55e", "Moderate": "#eab308",
@@ -121,6 +122,13 @@ export default function SuccessClient() {
   const rawName       = searchParams.get("name") ?? "";
   const displayName   = rawName ? decodeURIComponent(rawName) : "there";
 
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [feedbackName, setFeedbackName] = useState(displayName === "there" ? "" : displayName);
+  const [feedbackEmail, setFeedbackEmail] = useState("");
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [feedbackStatus, setFeedbackStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
+  const [feedbackError, setFeedbackError] = useState("");
+
   const [latestResults, setLatestResults] = useState<CategoryResult[] | null>(null);
 
   useEffect(() => {
@@ -180,6 +188,87 @@ export default function SuccessClient() {
               </div>
             ))}
           </div>
+        </div>
+
+        <div className="glass-card p-6 text-left mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h2 className="text-sm font-bold text-[var(--text-base)] mb-2">Suggestions or Feedback</h2>
+              <p className="text-xs text-[var(--text-muted)]">Share any ideas or improvements about the assessment experience.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setFeedbackOpen(open => !open)}
+              className="inline-flex items-center justify-center rounded-xl bg-[#1d6eb5] px-4 py-2 text-sm font-semibold text-white hover:bg-[#165eab] transition-all"
+            >
+              {feedbackOpen ? "Hide feedback form" : "Send feedback"}
+            </button>
+          </div>
+
+          {feedbackOpen && (
+            <form
+              onSubmit={async (event) => {
+                event.preventDefault();
+                setFeedbackError("");
+                setFeedbackStatus("saving");
+                const response = await postFeedback({
+                  name: feedbackName || "Anonymous",
+                  email: feedbackEmail,
+                  message: feedbackMessage,
+                });
+                if (!response) {
+                  setFeedbackError("Unable to send feedback. Please try again.");
+                  setFeedbackStatus("error");
+                } else {
+                  setFeedbackStatus("success");
+                  setFeedbackMessage("");
+                  setFeedbackEmail("");
+                }
+              }}
+              className="mt-5 space-y-4"
+            >
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block text-sm">
+                  <span className="text-[var(--text-muted)]">Name</span>
+                  <input
+                    value={feedbackName}
+                    onChange={(e) => setFeedbackName(e.target.value)}
+                    placeholder="Optional name"
+                    className="mt-2 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-base)] focus:outline-none focus:ring-2 focus:ring-[#1d6eb5]/40"
+                  />
+                </label>
+                <label className="block text-sm">
+                  <span className="text-[var(--text-muted)]">Email</span>
+                  <input
+                    type="email"
+                    value={feedbackEmail}
+                    onChange={(e) => setFeedbackEmail(e.target.value)}
+                    placeholder="Optional email"
+                    className="mt-2 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-base)] focus:outline-none focus:ring-2 focus:ring-[#1d6eb5]/40"
+                  />
+                </label>
+              </div>
+              <label className="block text-sm">
+                <span className="text-[var(--text-muted)]">Message</span>
+                <textarea
+                  value={feedbackMessage}
+                  onChange={(e) => setFeedbackMessage(e.target.value)}
+                  placeholder="Write your suggestion or feedback here..."
+                  rows={5}
+                  className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-base)] focus:outline-none focus:ring-2 focus:ring-[#1d6eb5]/40 resize-none"
+                />
+              </label>
+              {feedbackError && <p className="text-xs text-red-400">{feedbackError}</p>}
+              {feedbackStatus === "success" && <p className="text-xs text-green-400">Thank you! Your feedback has been sent.</p>}
+              <button
+                type="submit"
+                disabled={feedbackStatus === "saving" || feedbackMessage.trim().length === 0}
+                className="inline-flex items-center justify-center rounded-xl bg-[#10b981] px-5 py-3 text-sm font-semibold text-white hover:bg-[#0f9a6a] transition-all disabled:opacity-60"
+              >
+                {feedbackStatus === "saving" ? "Sending…" : "Submit feedback"}
+              </button>
+            </form>
+          )}
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3">
