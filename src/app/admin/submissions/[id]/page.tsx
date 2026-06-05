@@ -43,7 +43,7 @@ function formatDate(iso: string) {
 }
 
 function renderEventDetails(entry: SubmissionHistoryEntry) {
-  const details = entry.eventDetails || {};
+  const details = (entry.eventDetails || {}) as Record<string, any>;
   const rawEventType = entry.eventType ?? '';
   // Normalize eventType: convert to lowercase and replace spaces/underscores with underscores for matching
   const normalizedEventType = rawEventType.toLowerCase().replace(/[\s_]+/g, '_');
@@ -67,7 +67,7 @@ function renderEventDetails(entry: SubmissionHistoryEntry) {
         <div className="flex flex-col gap-1.5 bg-[var(--bg-page)]/50 p-2.5 rounded-lg border border-[var(--border)] mt-1.5">
           <div className="flex justify-between items-center">
             <span>Initial Status:</span>
-            {renderStatusBadge(details.status || "pending")}
+            {renderStatusBadge(typeof details.status === 'string' ? details.status : "pending")}
           </div>
           {details.submittedAt && (
             <div className="flex justify-between items-center text-[11px]">

@@ -150,31 +150,7 @@ export default function SurveyPage() {
   const currentSectionIdx = SECTION_STEPS.indexOf(step as Step);
   const currentSection    = currentSectionIdx >= 0 ? SURVEY_SECTIONS[currentSectionIdx] : null;
 
-  function quickFill() {
-    setInfo({
-      clientName: "Test Company Inc.",
-      address: "123 Innovation Drive",
-      traineeName: "John Doe",
-      jobTitle: "Data Analyst",
-      mobileNumber: "09123456789",
-      telephoneNumber: "",
-      email: "johndoe@example.com",
-      rank: "Senior Analyst",
-      ageBracket: "25–34",
-      positionClassification: "Technical",
-    });
-    const testResponses: Record<string, Response> = {};
-    QUESTIONS.forEach(q => {
-      const rating = (Math.floor(Math.random() * 5) + 1) as SkillLevel;
-      testResponses[q.id] = { questionId: q.id, rating };
-    });
-    setResponses(testResponses);
-    setOA({
-      tasksPerformed: "Creating weekly reports, analyzing sales data.",
-      trainingGoals: "Learn how to automate reports with macros."
-    });
-    setStep("review");
-  }
+
 
   return (
     <div className="min-h-screen transition-colors duration-300" style={{ backgroundColor: 'var(--bg-page)', color: 'var(--text-base)' }} ref={topRef}>
@@ -187,11 +163,6 @@ export default function SurveyPage() {
           </Link>
           <div className="flex items-center gap-2 sm:gap-4">
             <Image src="/informatics-logo-white.png" alt="Informatics Holdings Philippines" width={100} height={26} className="h-5 sm:h-6 w-auto object-contain" />
-            {process.env.NODE_ENV === "development" && (
-              <button onClick={quickFill} className="hidden sm:block px-2 py-1 rounded text-[10px] font-bold bg-[#60a5fa]/20 text-[#60a5fa] hover:bg-[#60a5fa]/30 transition-colors uppercase tracking-wider">
-                Quick Fill
-              </button>
-            )}
             <ThemeToggle />
           </div>
           {step !== "privacy" && step !== "submitting" ? (
