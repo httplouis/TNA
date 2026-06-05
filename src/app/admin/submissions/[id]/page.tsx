@@ -44,7 +44,9 @@ function formatDate(iso: string) {
 
 function renderEventDetails(entry: SubmissionHistoryEntry) {
   const details = entry.eventDetails || {};
-  const eventType = entry.eventType;
+  const rawEventType = entry.eventType ?? '';
+  // Normalize eventType: convert to lowercase and replace spaces/underscores with underscores for matching
+  const normalizedEventType = rawEventType.toLowerCase().replace(/[\s_]+/g, '_');
 
   const renderStatusBadge = (status: string) => {
     const scfg = STATUS_CONFIG[status as TStatus];
@@ -58,7 +60,7 @@ function renderEventDetails(entry: SubmissionHistoryEntry) {
     );
   };
 
-  if (eventType === "created") {
+  if (normalizedEventType === "created") {
     return (
       <div className="space-y-1.5 text-xs text-[var(--text-muted)]">
         <p>The trainee submitted their Excel self-assessment.</p>
@@ -86,7 +88,7 @@ function renderEventDetails(entry: SubmissionHistoryEntry) {
     );
   }
 
-  if (eventType === "status_updated") {
+  if (normalizedEventType === "status_updated") {
     return (
       <div className="space-y-2 text-xs text-[var(--text-muted)]">
         <div className="flex items-center gap-2">
@@ -107,7 +109,7 @@ function renderEventDetails(entry: SubmissionHistoryEntry) {
     );
   }
 
-  if (eventType === "notes_updated") {
+  if (normalizedEventType === "notes_updated") {
     return (
       <div className="space-y-2 text-xs text-[var(--text-muted)]">
         <p>Admin notes were updated.</p>
@@ -122,28 +124,72 @@ function renderEventDetails(entry: SubmissionHistoryEntry) {
     );
   }
 
-  // Fallback for custom or unrecognized events
+  // Fallback for custom or unrecognized events - make it more user-friendly
   const keys = Object.keys(details);
-  if (keys.length === 0) return null;
+  if (keys.length === 0) {
+    return <p className="text-xs text-[var(--text-muted)]">No details available for this event.</p>;
+  }
+
+  // Special handling for common cases to make it more readable
+  if (keys.length === 1 && keys[0] === "status") {
+    return (
+      <div className="space-y-1 text-xs text-[var(--text-muted)]">
+        <div className="flex items-center gap-2">
+          <span>Status updated to:</span>
+          {renderStatusBadge(details.status || "")}
+        </div>
+        {details.adminNotes && (
+          <div className="mt-1 bg-[var(--bg-page)]/50 p-2 rounded-lg border border-[var(--border)]">
+            <p className="text-[var(--text-base)] italic text-sm whitespace-pre-wrap">
+              "{details.adminNotes}"
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (keys.length === 1 && keys[0] === "adminNotes") {
+    return (
+      <div className="space-y-1 text-xs text-[var(--text-muted)]">
+        <p>Admin notes were updated.</p>
+        {details.adminNotes && (
+          <div className="mt-1 bg-[var(--bg-page)]/50 p-2 rounded-lg border border-[var(--border)]">
+            <p className="text-[var(--text-base)] italic text-sm whitespace-pre-wrap">
+              "{details.adminNotes}"
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-1.5 text-xs bg-[var(--bg-page)]/50 p-2.5 rounded-lg border border-[var(--border)]">
       {keys.map((key) => {
         const val = details[key];
+        // Format key to be more readable: camelCase/snake_case to Title Case
         const formattedKey = key
           .replace(/([A-Z])/g, " $1")
           .replace(/_/g, " ")
-          .replace(/^\w/, (c) => c.toUpperCase());
+          .replace(/\b\w/g, c => c.toUpperCase());
 
         let formattedVal = "";
         if (typeof val === "object" && val !== null) {
-          formattedVal = JSON.stringify(val);
+          // For objects, try to make them more readable if they're simple
+          if (val.status !== undefined) {
+            // This looks like a status object
+            formattedVal = val.status;
+          } else {
+            formattedVal = JSON.stringify(val);
+          }
         } else if (typeof val === "boolean") {
           formattedVal = val ? "Yes" : "No";
         } else {
           formattedVal = String(val);
         }
 
+        // Format date strings to be more readable
         if (typeof val === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(val)) {
           formattedVal = new Date(val).toLocaleDateString("en-PH", {
             month: "short",
@@ -154,11 +200,12 @@ function renderEventDetails(entry: SubmissionHistoryEntry) {
           });
         }
 
+        // Special formatting for status
         if (key === "status") {
           return (
             <div key={key} className="flex justify-between items-center py-1 border-b border-white/5 last:border-0">
               <span className="text-[var(--text-muted)]">{formattedKey}:</span>
-              {renderStatusBadge(val)}
+              {renderStatusBadge(formattedVal)}
             </div>
           );
         }
